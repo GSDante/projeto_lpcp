@@ -1,0 +1,85 @@
+func bool compare (string a, string b){
+   return a == b;
+}
+
+func int min (int a, int b, int c){
+   if( a > b AND b > c) {
+      return c;
+   } else if (b >= a AND a >= c){
+      return c;
+   } else if (a > c AND c > b){
+      return b;
+   } else if ( b > c AND c > a){
+      return a;
+   } else if ( c > b AND b > a){
+      return a;
+   } else if ( c > a AND a > b) {
+      return b;
+   }
+} b;
+}
+
+func int min (int a, int b, int c){
+   if( a > b AND b > c) {
+      return c;
+   } else if (b >= a AND a >= c){
+      return c;
+   } else if (a > c AND c > b){
+      return b;
+   } else if ( b > c AND c > a){
+      return a;
+   } else if ( c > b AND b > a){
+      return a;
+   } else if ( c > a  a > b) {
+      return b;
+   }
+}
+
+program main
+
+{
+   int x ;
+   x = 1;
+   if(x > 0){print "ok!"}
+
+   float y;
+   y = 34.6;
+
+   int z;
+   z = 13 + 40.3;
+   z = 50 * 20;
+
+   int v[20];
+
+   for(int i = 0; i < 20 ; i+=1){
+      v[i] +=10;
+      if( v[i] > 30){
+         v[i] -= 10;
+      }
+   }
+
+   while(x^2 > 1000){
+      x-=20;
+   }
+
+   int a;
+   int b;
+   int c;
+   a = 0;
+   b = 6;
+   c = 5;
+
+   b /= 2;
+
+   do {
+      a *= 2;
+   } while(a != b OR a != c);
+   
+   
+
+   bool w;
+   w = True;
+
+
+
+}
