@@ -1,5 +1,11 @@
 # Lpcp
 
-alex Lexer.x
-ghc analisador.hs
-./analisador
+
+
+## Para executar:
+    
+    alex Lexer.x
+
+    ghc analisador.hs
+    
+    ./analisador

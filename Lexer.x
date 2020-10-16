@@ -1,5 +1,5 @@
 {
-module Lexer (main) where
+module Lexer where
 
 import System.IO
 import System.IO.Unsafe
@@ -14,7 +14,7 @@ tokens :-
 
   $white+                                ;
   "--".*                                 ;
-  program                                { \s -> Program }
+  main                                { \s -> Program }
   "{"                                    { \s -> Begin}
   "}"                                    { \s -> End}
   ";"                                    { \s -> SemiColon}
@@ -108,7 +108,10 @@ data Token =
   String String
   deriving (Eq,Show)
 
-main = do
-  s <- getContents
-  print (alexScanTokens s)
+
+getTokens fn = unsafePerformIO (getTokensAux fn)
+
+getTokensAux fn = do {fh <- openFile fn ReadMode;
+                      s <- hGetContents fh;
+                      return (alexScanTokens s)}
 }

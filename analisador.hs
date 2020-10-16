@@ -73,7 +73,7 @@ parser :: [Token] -> Either ParseError [Token]
 parser tokens = runParser program () "Error message" tokens
 
 main :: IO ()
-main = case parser (getTokens "program.pe") of
+main = case parser (getTokens "program1.pe") of
             { Left err -> print err; 
               Right ans -> print ans
             }
