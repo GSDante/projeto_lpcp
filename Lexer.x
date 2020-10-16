@@ -1,5 +1,8 @@
 {
-module Main (main) where
+module Lexer (main) where
+
+import System.IO
+import System.IO.Unsafe
 }
 
 %wrapper "basic"
