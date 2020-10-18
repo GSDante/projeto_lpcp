@@ -34,6 +34,10 @@ intToken = tokenPrim show update_pos get_token where
   get_token (Int x) = Just (Int x)
   get_token _       = Nothing
 
+printToken = tokenPrim show update_pos get_token where
+  get_token Print = Just Print
+  get_token _       = Nothing
+
 update_pos :: SourcePos -> Token -> [Token] -> SourcePos
 update_pos pos _ (tok:_) = pos -- necessita melhoria
 update_pos pos _ []      = pos
@@ -58,7 +62,7 @@ stmts = try( do
           return []
 
 stmt :: Parsec [Token] st [Token]
-stmt = assign 
+stmt = assign <|> print_exp
 
 assign :: Parsec [Token] st [Token]
 assign = do
@@ -66,6 +70,12 @@ assign = do
           b <- assignToken
           c <- intToken
           return (a:b:[c])
+
+print_exp :: Parsec [Token] st [Token]
+print_exp = do 
+        a <- printToken
+        b <- idToken
+        return (a:[b])
 
 remaining_stmts :: Parsec [Token] st [Token]
 remaining_stmts = (do a <- semiColonToken
