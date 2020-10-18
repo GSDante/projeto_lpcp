@@ -50,10 +50,15 @@ program = do
             return (a:[b] ++ c ++ [d])
 
 stmts :: Parsec [Token] st [Token]
-stmts = do
-          first <- assign
+stmts = try( do
+          first <- stmt
           next <- remaining_stmts
-          return (first ++ next)
+          return (first ++ next))
+          <|>
+          return []
+
+stmt :: Parsec [Token] st [Token]
+stmt = assign 
 
 assign :: Parsec [Token] st [Token]
 assign = do
@@ -64,7 +69,7 @@ assign = do
 
 remaining_stmts :: Parsec [Token] st [Token]
 remaining_stmts = (do a <- semiColonToken
-                      b <- assign
+                      b <- stmts
                       return (a:b)) <|> (return [])
 
 -- invocação do parser para o símbolo de partida 
