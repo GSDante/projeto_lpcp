@@ -8,5 +8,5 @@ main {
     zeta = "ola mundo";
     var = True;
     w = 2.3;
-    print "oi";
+    print "1oi";
 }
