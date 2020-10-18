@@ -50,6 +50,35 @@ floatToken = tokenPrim show update_pos get_token where
   get_token (Float x) = Just (Float x)
   get_token _       = Nothing
 
+sumToken = tokenPrim show update_pos get_token where
+  get_token Sum = Just Sum
+  get_token _       = Nothing
+
+subToken = tokenPrim show update_pos get_token where
+  get_token Sub = Just Sub
+  get_token _       = Nothing
+
+
+multToken = tokenPrim show update_pos get_token where
+  get_token Multi = Just Multi
+  get_token _       = Nothing
+
+divToken = tokenPrim show update_pos get_token where
+  get_token Div = Just Div
+  get_token _       = Nothing
+
+expToken = tokenPrim show update_pos get_token where
+  get_token Pow = Just Pow
+  get_token _       = Nothing
+
+radToken = tokenPrim show update_pos get_token where
+  get_token Rad = Just Rad
+  get_token _       = Nothing
+
+restoDivToken = tokenPrim show update_pos get_token where
+  get_token Mod = Just Mod
+  get_token _       = Nothing
+
 
 update_pos :: SourcePos -> Token -> [Token] -> SourcePos
 update_pos pos _ (tok:_) = pos -- necessita melhoria
@@ -81,8 +110,32 @@ assign :: Parsec [Token] st [Token]
 assign = do
           a <- idToken
           b <- assignToken
-          c <- intToken <|> stringToken <|> boolToken <|> floatToken
-          return (a:b:[c])
+          c <- expression
+          return (a:b:c)
+
+
+expression :: Parsec [Token] st [Token]
+expression = try( do
+                  a <- expression_int
+                  return (a) )
+                  <|> 
+                  do 
+                    a <- intToken <|> stringToken <|> boolToken <|> floatToken 
+                    return [a]
+
+int_operation :: Parsec [Token] st [Token]
+int_operation = do
+        a <- sumToken <|> subToken <|> multToken <|> divToken <|> expToken <|> radToken <|> restoDivToken
+        return [a]
+
+
+expression_int :: Parsec [Token] st [Token]
+expression_int = do
+        a <- intToken
+        b <- int_operation
+        c <- intToken 
+        return ([a]++b++[c])
+
 
 print_exp :: Parsec [Token] st [Token]
 print_exp = do 
