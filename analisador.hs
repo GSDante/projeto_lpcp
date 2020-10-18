@@ -40,18 +40,42 @@ assignToken = tokenPrim show update_pos get_token where
   get_token Assign = Just Assign
   get_token _      = Nothing
 
+printToken = tokenPrim show update_pos get_token where
+  get_token Print = Just Print
+  get_token _       = Nothing
+
 intToken = tokenPrim show update_pos get_token where
   get_token (Int x) = Just (Int x)
   get_token _       = Nothing
 
---arrayToken :: Parsec [Token] st [Token]
---arrayToken =
---    do
---        lbrack <- beginIndexToken
---        elementtype <- many (noneOf ",")
---        rbrack <- endIndexToken
-        
---        return (lbrack:elementtype : rbrack)
+stringToken = tokenPrim show update_pos get_token where
+  get_token (String x) = Just (String x)
+  get_token _       = Nothing
+
+
+boolToken = tokenPrim show update_pos get_token where
+  get_token (Bool x) = Just (Bool x)
+  get_token _       = Nothing
+
+floatToken = tokenPrim show update_pos get_token where
+  get_token (Float x) = Just (Float x)
+  get_token _       = Nothing
+
+arrayToken :: Parsec [Token] st [Token]
+arrayToken =
+    do
+      lbrack <- beginIndexToken
+      innerContent <- innerContentArray
+      rbrack <- endIndexToken
+      
+      return (lbrack:elementtype ++ [rbrack])
+
+innerContentArray = try many(string ',')
+                    <|> try many (int ',' )
+
+typeToken = tokenPrim show update_pos get_token where
+  get_token (Type x) = Just (Type x)
+  get_token _       = Nothing
 
 update_pos :: SourcePos -> Token -> [Token] -> SourcePos
 update_pos pos _ (tok:_) = pos -- necessita melhoria
@@ -69,21 +93,29 @@ program = do
             return (a:[b] ++ c ++ [d])
 
 stmts :: Parsec [Token] st [Token]
-stmts = try(do
+stmts = try( do
           first <- stmt
           next <- remaining_stmts
           return (first ++ next))
-          <|> return []
+          <|>
+          return []
 
 stmt :: Parsec [Token] st [Token]
-stmt = assign 
+stmt = assign <|> print_exp
 
 assign :: Parsec [Token] st [Token]
 assign = do
+          t <- typeToken
           a <- idToken
           b <- assignToken
-          c <- intToken <|> beginIndexToken
-          return (a:b:[c])
+          c <- intToken <|> stringToken <|> boolToken <|> floatToken <|> arrayToken
+          return (t:a:b:[c])
+
+print_exp :: Parsec [Token] st [Token]
+print_exp = do 
+        a <- printToken
+        b <- idToken <|> stringToken
+        return (a:[b])
 
 remaining_stmts :: Parsec [Token] st [Token]
 remaining_stmts = (do a <- semiColonToken

@@ -9,7 +9,7 @@ import System.IO.Unsafe
 
 $digit = 0-9      -- digits
 $alpha = [a-zA-Z]   -- alphabetic characters
-@int_array = \[ $digit+(\,\s*$digit+)+ \]
+$alphanum = [a-zA-Z0-9]
 
 tokens :-
 
@@ -24,6 +24,7 @@ tokens :-
   float                                  { \s -> Type s}
   bool                                   { \s -> Type s}
   string                                 { \s -> Type s}
+  array                                  { \s -> Type s}
   =                                      { \s -> Assign}
   "("				                             { \s -> BeginParenthesis}
   ")"				                             { \s -> EndParenthesis}
@@ -59,7 +60,7 @@ tokens :-
   "True"                                 { \s -> Bool (read s) }
   "False"                                { \s -> Bool (read s) }
   $alpha+[$alpha $digit \_ \']*          { \s -> Id s }
-  \" $alpha [$alpha $digit ! \_ \']* \"  { \s -> String s}
+  \" $alphanum [$alphanum ! \_ \ \s']* \"  { \s -> String s}
 {
 -- Each action has type :: String -> Token
 
