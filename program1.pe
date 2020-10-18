@@ -3,5 +3,7 @@
 main {
     x = 3;
     y = 4;
-    z = 5;
+    zeta = "ola mundo";
+    var = True;
+    w = 2.3
 }

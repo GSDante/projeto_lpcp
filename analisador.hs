@@ -34,6 +34,19 @@ intToken = tokenPrim show update_pos get_token where
   get_token (Int x) = Just (Int x)
   get_token _       = Nothing
 
+stringToken = tokenPrim show update_pos get_token where
+  get_token (String x) = Just (String x)
+  get_token _       = Nothing
+
+boolToken = tokenPrim show update_pos get_token where
+  get_token (Bool x) = Just (Bool x)
+  get_token _       = Nothing
+
+floatToken = tokenPrim show update_pos get_token where
+  get_token (Float x) = Just (Float x)
+  get_token _       = Nothing
+
+
 update_pos :: SourcePos -> Token -> [Token] -> SourcePos
 update_pos pos _ (tok:_) = pos -- necessita melhoria
 update_pos pos _ []      = pos
@@ -64,7 +77,7 @@ assign :: Parsec [Token] st [Token]
 assign = do
           a <- idToken
           b <- assignToken
-          c <- intToken
+          c <- intToken <|> stringToken <|> boolToken <|> floatToken
           return (a:b:[c])
 
 remaining_stmts :: Parsec [Token] st [Token]
