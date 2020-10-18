@@ -17,6 +17,14 @@ whileToken = tokenPrim show update_pos get_token where
   get_token While     = Just While
   get_token _      = Nothing
 
+ifToken = tokenPrim show update_pos get_token where
+  get_token If     = Just If
+  get_token _      = Nothing
+
+elseToken = tokenPrim show update_pos get_token where
+  get_token Else     = Just Else
+  get_token _      = Nothing
+
 beginToken = tokenPrim show update_pos get_token where
   get_token Begin = Just Begin
   get_token _     = Nothing
@@ -94,7 +102,7 @@ stmts = try( do
           return []
 
 stmt :: Parsec [Token] st [Token]
-stmt = assign <|> while
+stmt = assign <|> while <|> ifs
 
 operacao_boolean :: Parsec[Token] st [Token]
 operacao_boolean = (do
@@ -132,6 +140,32 @@ while = do
        f <- stmts
        g <- endToken
        return (a:[b] ++ c ++ d:[e]++ f ++ [g]) <|> (return [])
+
+ifs :: Parsec [Token] st [Token]
+ifs = 
+       try (do
+         a <- ifToken
+         b <- beginParenthesisToken
+         c <- expressao_boolean
+         d <- endParenthesisToken
+         e <- beginToken
+         f <- stmts
+         g <- endToken
+         h <- elseToken
+         i <- beginToken
+         j <- stmts
+         k <- endToken
+         return (a:[b] ++ c ++ d:[e] ++ f ++ g:h:[i] ++ j ++ [k]))
+         <|>
+         (do
+           a <- ifToken
+           b <- beginParenthesisToken
+           c <- expressao_boolean
+           d <- endParenthesisToken
+           e <- beginToken
+           f <- stmts
+           g <- endToken
+           return (a:[b] ++ c ++ d:[e]++ f ++ [g])) <|> (return [])
 
 remaining_stmts :: Parsec [Token] st [Token]
 remaining_stmts = (do a <- semiColonToken
