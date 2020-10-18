@@ -58,7 +58,7 @@ tokens :-
   "True"                                 { \s -> Bool (read s) }
   "False"                                { \s -> Bool (read s) }
   $alpha+[$alpha $digit \_ \']*          { \s -> Id s }
-  \" $alpha [$alpha $digit ! \_ \']* \"  { \s -> String s}
+  \" $alpha [$alpha $digit ! \_ \ \s']* \"  { \s -> String s}
 {
 -- Each action has type :: String -> Token
 
