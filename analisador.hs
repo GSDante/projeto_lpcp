@@ -21,6 +21,16 @@ endToken = tokenPrim show update_pos get_token where
   get_token End = Just End
   get_token _   = Nothing
 
+beginIndexToken :: Parsec [Token] st Token
+beginIndexToken = tokenPrim show update_pos get_token where
+  get_token BeginIndex = Just BeginIndex
+  get_token _     = Nothing
+
+endIndexToken :: Parsec [Token] st Token
+endIndexToken = tokenPrim show update_pos get_token where
+  get_token EndIndex = Just EndIndex
+  get_token _     = Nothing
+
 semiColonToken :: Parsec [Token] st Token
 semiColonToken = tokenPrim show update_pos get_token where
   get_token SemiColon = Just SemiColon
@@ -33,6 +43,15 @@ assignToken = tokenPrim show update_pos get_token where
 intToken = tokenPrim show update_pos get_token where
   get_token (Int x) = Just (Int x)
   get_token _       = Nothing
+
+--arrayToken :: Parsec [Token] st [Token]
+--arrayToken =
+--    do
+--        lbrack <- beginIndexToken
+--        elementtype <- many (noneOf ",")
+--        rbrack <- endIndexToken
+        
+--        return (lbrack:elementtype : rbrack)
 
 update_pos :: SourcePos -> Token -> [Token] -> SourcePos
 update_pos pos _ (tok:_) = pos -- necessita melhoria
@@ -50,22 +69,29 @@ program = do
             return (a:[b] ++ c ++ [d])
 
 stmts :: Parsec [Token] st [Token]
-stmts = do
-          first <- assign
+stmts = try(do
+          first <- stmt
           next <- remaining_stmts
-          return (first ++ next)
+          return (first ++ next))
+          <|> return []
+
+stmt :: Parsec [Token] st [Token]
+stmt = assign 
 
 assign :: Parsec [Token] st [Token]
 assign = do
           a <- idToken
           b <- assignToken
-          c <- intToken
+          c <- intToken <|> beginIndexToken
           return (a:b:[c])
 
 remaining_stmts :: Parsec [Token] st [Token]
 remaining_stmts = (do a <- semiColonToken
-                      b <- assign
+                      b <- stmts
                       return (a:b)) <|> (return [])
+
+-- operacoes enter matrix e array
+-- cardinalidade(#), produto escalar(.*),indexação. Tipos(array e matriz)
 
 -- invocação do parser para o símbolo de partida 
 

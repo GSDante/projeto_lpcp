@@ -9,6 +9,7 @@ import System.IO.Unsafe
 
 $digit = 0-9      -- digits
 $alpha = [a-zA-Z]   -- alphabetic characters
+@int_array = \[ $digit+(\,\s*$digit+)+ \]
 
 tokens :-
 
@@ -69,6 +70,8 @@ data Token =
   End     |
   BeginParenthesis |
   EndParenthesis |
+  BeginIndex |
+  EndIndex |
   SemiColon |
   Colon |
   Assign    | 
@@ -76,8 +79,6 @@ data Token =
   Else |
   Print |
   Greater |
-  BeginIndex|
-  EndIndex|
   Increment |
   Decrement|
   MultEqual |
@@ -101,11 +102,10 @@ data Token =
   Do |
   Type String |
   Id String |
-  Array String|
   Int Int |
   Float Float|
   Bool Bool |
-  String String
+  String String  
   deriving (Eq,Show)
 
 
