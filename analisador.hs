@@ -13,12 +13,8 @@ idToken = tokenPrim show update_pos get_token where
   get_token (Id x) = Just (Id x)
   get_token _      = Nothing
 
-ifToken = tokenPrim show update_pos get_token where
-  get_token If     = Just If
-  get_token _      = Nothing
-
-elseToken = tokenPrim show update_pos get_token where
-  get_token Else   = Just Else
+whileToken = tokenPrim show update_pos get_token where
+  get_token While     = Just While
   get_token _      = Nothing
 
 beginToken = tokenPrim show update_pos get_token where
@@ -62,6 +58,14 @@ lessEqualToken = tokenPrim show update_pos get_token where
   get_token LessOrEqual = Just LessOrEqual
   get_token _              = Nothing
 
+equalToken = tokenPrim show update_pos get_token where
+  get_token Equal = Just Equal
+  get_token _     = Nothing
+
+diffToken = tokenPrim show update_pos get_token where
+  get_token Diff = Just Diff
+  get_token _              = Nothing
+
 intToken = tokenPrim show update_pos get_token where
   get_token (Int x) = Just (Int x)
   get_token _       = Nothing
@@ -90,14 +94,56 @@ stmts = try( do
           return []
 
 stmt :: Parsec [Token] st [Token]
-stmt = assign 
+stmt = assign <|> while
 
 exp :: Parsec [Token] st [Token]
 exp = op_boolean
 
 op_boolean :: Parsec[Token] st [Token]
-op_boolean = greaterToken <|> lessToken <|> greaterEqualToken
-              <|> lessEqualToken <|> equalToken <|> diffToken
+op_boolean = (do  a <- greater <|> less <|> greaterEqual <|> lessEqual <|> isEqual <|> diff 
+                  return ([a]))
+
+greater :: Parsec[Token] st [Token]
+greater = do 
+          a <- intToken
+          b <- greaterToken
+          c <- intToken
+          return (a:b:[c])
+
+less :: Parsec[Token] st [Token]
+less = do 
+          a <- intToken
+          b <- lessToken
+          c <- intToken
+          return (a:b:[c])
+
+greaterEqual :: Parsec[Token] st [Token]
+greaterEqual = do 
+          a <- intToken
+          b <- greaterEqualToken
+          c <- intToken
+          return (a:b:[c])
+
+lessEqual :: Parsec[Token] st [Token]
+lessEqual = do 
+          a <- intToken
+          b <- lessEqualToken
+          c <- intToken
+          return (a:b:[c])
+
+isEqual :: Parsec[Token] st [Token]
+isEqual = do 
+          a <- intToken
+          b <- equalToken
+          c <- intToken
+          return (a:b:[c])
+
+diff :: Parsec[Token] st [Token]
+diff = do 
+          a <- intToken
+          b <- diffToken
+          c <- intToken
+          return (a:b:[c])
 
 assign :: Parsec [Token] st [Token]
 assign = do
@@ -106,16 +152,16 @@ assign = do
           c <- intToken
           return (a:b:[c])
 
-ifs :: Parsec [Token] st [Token]
-ifs = do
-       a <- ifToken
+while :: Parsec [Token] st [Token]
+while = do
+       a <- whileToken
        b <- beginParenthesisToken
        c <- op_boolean
        d <- endParenthesisToken
        e <- beginToken
        f <- stmts
        g <- endToken
-       return (a:b:c:d:e:f:[g])
+       return (a:b ++ c ++ d:[e]++ f ++ [g]) <|> (return [])
 
 remaining_stmts :: Parsec [Token] st [Token]
 remaining_stmts = (do a <- semiColonToken
