@@ -30,6 +30,22 @@ assignToken = tokenPrim show update_pos get_token where
   get_token Assign = Just Assign
   get_token _      = Nothing
 
+greaterToken = tokenPrim show update_pos get_token where
+  get_token Greater = Just Greater
+  get_token _       = Nothing
+
+lessToken = tokenPrim show update_pos get_token where
+  get_token Less = Just Less
+  get_token _    = Nothing
+
+greaterEqualToken = tokenPrim show update_pos get_token where
+  get_token GreaterOrEqual = Just GreaterOrEqual
+  get_token _              = Nothing
+
+lessEqualToken = tokenPrim show update_pos get_token where
+  get_token LessOrEqual = Just LessOrEqual
+  get_token _              = Nothing
+
 intToken = tokenPrim show update_pos get_token where
   get_token (Int x) = Just (Int x)
   get_token _       = Nothing
@@ -59,6 +75,13 @@ stmts = try( do
 
 stmt :: Parsec [Token] st [Token]
 stmt = assign 
+
+exp :: Parsec [Token] st [Token]
+exp = op_boolean
+
+op_boolean :: Parsec[Token] st [Token]
+op_boolean = greaterToken <|> lessToken <|> greaterEqualToken
+              <|> lessEqualToken <|> equalToken <|> diffToken
 
 assign :: Parsec [Token] st [Token]
 assign = do
