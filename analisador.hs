@@ -100,49 +100,51 @@ exp :: Parsec [Token] st [Token]
 exp = op_boolean
 
 op_boolean :: Parsec[Token] st [Token]
-op_boolean = (do  a <- greater <|> less <|> greaterEqual <|> lessEqual <|> isEqual <|> diff 
-                  return ([a]))
+op_boolean =  greater <|> less 
+                    <|> greaterEqual <|> lessEqual 
+                    <|> isEqual <|> diff 
+        
 
 greater :: Parsec[Token] st [Token]
 greater = do 
-          a <- intToken
+          a <- idToken
           b <- greaterToken
-          c <- intToken
+          c <- idToken
           return (a:b:[c])
 
 less :: Parsec[Token] st [Token]
 less = do 
-          a <- intToken
+          a <- idToken
           b <- lessToken
-          c <- intToken
+          c <- idToken
           return (a:b:[c])
 
 greaterEqual :: Parsec[Token] st [Token]
 greaterEqual = do 
-          a <- intToken
+          a <- idToken
           b <- greaterEqualToken
-          c <- intToken
+          c <- idToken
           return (a:b:[c])
 
 lessEqual :: Parsec[Token] st [Token]
 lessEqual = do 
-          a <- intToken
+          a <- idToken
           b <- lessEqualToken
-          c <- intToken
+          c <- idToken
           return (a:b:[c])
 
 isEqual :: Parsec[Token] st [Token]
 isEqual = do 
-          a <- intToken
+          a <- idToken
           b <- equalToken
-          c <- intToken
+          c <- idToken
           return (a:b:[c])
 
 diff :: Parsec[Token] st [Token]
 diff = do 
-          a <- intToken
+          a <- idToken
           b <- diffToken
-          c <- intToken
+          c <- idToken
           return (a:b:[c])
 
 assign :: Parsec [Token] st [Token]
@@ -161,7 +163,7 @@ while = do
        e <- beginToken
        f <- stmts
        g <- endToken
-       return (a:b ++ c ++ d:[e]++ f ++ [g]) <|> (return [])
+       return (a:b ++ c ++d:[e]++ f ++ [g]) <|> (return [])
 
 remaining_stmts :: Parsec [Token] st [Token]
 remaining_stmts = (do a <- semiColonToken
