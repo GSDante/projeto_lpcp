@@ -13,6 +13,14 @@ idToken = tokenPrim show update_pos get_token where
   get_token (Id x) = Just (Id x)
   get_token _      = Nothing
 
+ifToken = tokenPrim show update_pos get_token where
+  get_token If     = Just If
+  get_token _      = Nothing
+
+elseToken = tokenPrim show update_pos get_token where
+  get_token Else   = Just Else
+  get_token _      = Nothing
+
 beginToken = tokenPrim show update_pos get_token where
   get_token Begin = Just Begin
   get_token _     = Nothing
@@ -20,6 +28,14 @@ beginToken = tokenPrim show update_pos get_token where
 endToken = tokenPrim show update_pos get_token where
   get_token End = Just End
   get_token _   = Nothing
+
+beginParenthesisToken = tokenPrim show update_pos get_token where
+  get_token BeginParenthesis = Just BeginParenthesis
+  get_token _   = Nothing
+
+endParenthesisToken = tokenPrim show update_pos get_token where
+  get_token EndParenthesis = Just EndParenthesis
+  get_token _   = Nothing  
 
 semiColonToken :: Parsec [Token] st Token
 semiColonToken = tokenPrim show update_pos get_token where
@@ -89,6 +105,17 @@ assign = do
           b <- assignToken
           c <- intToken
           return (a:b:[c])
+
+ifs :: Parsec [Token] st [Token]
+ifs = do
+       a <- ifToken
+       b <- beginParenthesisToken
+       c <- op_boolean
+       d <- endParenthesisToken
+       e <- beginToken
+       f <- stmts
+       g <- endToken
+       return (a:b:c:d:e:f:[g])
 
 remaining_stmts :: Parsec [Token] st [Token]
 remaining_stmts = (do a <- semiColonToken
