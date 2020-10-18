@@ -96,56 +96,20 @@ stmts = try( do
 stmt :: Parsec [Token] st [Token]
 stmt = assign <|> while
 
-exp :: Parsec [Token] st [Token]
-exp = op_boolean
 
-op_boolean :: Parsec[Token] st [Token]
-op_boolean =  greater <|> less 
-                    <|> greaterEqual <|> lessEqual 
-                    <|> isEqual <|> diff 
-        
 
-greater :: Parsec[Token] st [Token]
-greater = do 
-          a <- idToken
-          b <- greaterToken
-          c <- idToken
-          return (a:b:[c])
+operacao_boolean :: Parsec[Token] st [Token]
+operacao_boolean = (do
+              a <- greaterToken <|> lessToken <|> greaterEqualToken <|> lessEqualToken 
+                <|> equalToken <|> diffToken
+              return [a])
 
-less :: Parsec[Token] st [Token]
-less = do 
-          a <- idToken
-          b <- lessToken
-          c <- idToken
-          return (a:b:[c])
-
-greaterEqual :: Parsec[Token] st [Token]
-greaterEqual = do 
-          a <- idToken
-          b <- greaterEqualToken
-          c <- idToken
-          return (a:b:[c])
-
-lessEqual :: Parsec[Token] st [Token]
-lessEqual = do 
-          a <- idToken
-          b <- lessEqualToken
-          c <- idToken
-          return (a:b:[c])
-
-isEqual :: Parsec[Token] st [Token]
-isEqual = do 
-          a <- idToken
-          b <- equalToken
-          c <- idToken
-          return (a:b:[c])
-
-diff :: Parsec[Token] st [Token]
-diff = do 
-          a <- idToken
-          b <- diffToken
-          c <- idToken
-          return (a:b:[c])
+expressao_boolean :: Parsec[Token] st [Token]
+expressao_boolean = do
+                a <- intToken
+                b <- operacao_boolean
+                c <- intToken
+                return ([a]++b++[c])
 
 assign :: Parsec [Token] st [Token]
 assign = do
@@ -158,12 +122,12 @@ while :: Parsec [Token] st [Token]
 while = do
        a <- whileToken
        b <- beginParenthesisToken
-       c <- op_boolean
+       c <- expressao_boolean
        d <- endParenthesisToken
        e <- beginToken
        f <- stmts
        g <- endToken
-       return (a:b ++ c ++d:[e]++ f ++ [g]) <|> (return [])
+       return (a:[b] ++ c ++ d:[e]++ f ++ [g]) <|> (return [])
 
 remaining_stmts :: Parsec [Token] st [Token]
 remaining_stmts = (do a <- semiColonToken
