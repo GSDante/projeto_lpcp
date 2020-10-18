@@ -30,6 +30,10 @@ assignToken = tokenPrim show update_pos get_token where
   get_token Assign = Just Assign
   get_token _      = Nothing
 
+printToken = tokenPrim show update_pos get_token where
+  get_token Print = Just Print
+  get_token _       = Nothing
+
 intToken = tokenPrim show update_pos get_token where
   get_token (Int x) = Just (Int x)
   get_token _       = Nothing
@@ -71,7 +75,7 @@ stmts = try( do
           return []
 
 stmt :: Parsec [Token] st [Token]
-stmt = assign 
+stmt = assign <|> print_exp
 
 assign :: Parsec [Token] st [Token]
 assign = do
@@ -79,6 +83,12 @@ assign = do
           b <- assignToken
           c <- intToken <|> stringToken <|> boolToken <|> floatToken
           return (a:b:[c])
+
+print_exp :: Parsec [Token] st [Token]
+print_exp = do 
+        a <- printToken
+        b <- idToken <|> stringToken
+        return (a:[b])
 
 remaining_stmts :: Parsec [Token] st [Token]
 remaining_stmts = (do a <- semiColonToken

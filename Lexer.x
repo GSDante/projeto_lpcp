@@ -9,6 +9,7 @@ import System.IO.Unsafe
 
 $digit = 0-9      -- digits
 $alpha = [a-zA-Z]   -- alphabetic characters
+$alphanum = [a-zA-Z0-9]
 
 tokens :-
 
@@ -58,7 +59,7 @@ tokens :-
   "True"                                 { \s -> Bool (read s) }
   "False"                                { \s -> Bool (read s) }
   $alpha+[$alpha $digit \_ \']*          { \s -> Id s }
-  \" $alpha [$alpha $digit ! \_ \ \s']* \"  { \s -> String s}
+  \" $alphanum [$alphanum ! \_ \ \s']* \"  { \s -> String s}
 {
 -- Each action has type :: String -> Token
 
