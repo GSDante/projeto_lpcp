@@ -96,8 +96,6 @@ stmts = try( do
 stmt :: Parsec [Token] st [Token]
 stmt = assign <|> while
 
-
-
 operacao_boolean :: Parsec[Token] st [Token]
 operacao_boolean = (do
               a <- greaterToken <|> lessToken <|> greaterEqualToken <|> lessEqualToken 
@@ -106,17 +104,23 @@ operacao_boolean = (do
 
 expressao_boolean :: Parsec[Token] st [Token]
 expressao_boolean = do
-                a <- intToken
+                a <- intToken <|> idToken
                 b <- operacao_boolean
-                c <- intToken
+                c <- intToken <|> idToken
                 return ([a]++b++[c])
 
 assign :: Parsec [Token] st [Token]
-assign = do
+assign = try (do
           a <- idToken
           b <- assignToken
           c <- intToken
-          return (a:b:[c])
+          return (a:b:[c]))
+          <|> 
+          (do
+            a <- idToken
+            b <- assignToken
+            c <- intToken
+            return (a:b:[c]))
 
 while :: Parsec [Token] st [Token]
 while = do
