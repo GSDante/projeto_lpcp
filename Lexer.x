@@ -24,6 +24,7 @@ tokens :-
   float                                  { \s -> Type s}
   bool                                   { \s -> Type s}
   string                                 { \s -> Type s}
+  array                                  { \s -> Type s}
   =                                      { \s -> Assign}
   "("				                             { \s -> BeginParenthesis}
   ")"				                             { \s -> EndParenthesis}
@@ -71,6 +72,8 @@ data Token =
   End     |
   BeginParenthesis |
   EndParenthesis |
+  BeginIndex |
+  EndIndex |
   SemiColon |
   Colon |
   Assign    | 
@@ -78,8 +81,6 @@ data Token =
   Else |
   Print |
   Greater |
-  BeginIndex|
-  EndIndex|
   Increment |
   Decrement|
   MultEqual |
@@ -104,11 +105,10 @@ data Token =
   Do |
   Type String |
   Id String |
-  Array String|
   Int Int |
   Float Float|
   Bool Bool |
-  String String
+  String String  
   deriving (Eq,Show)
 
 

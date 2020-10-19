@@ -28,6 +28,7 @@ main {
     float w = 2.3;
     print "1oi";
 
+    array ar = [1, 2];
 
     int a = 2 + 3;
     int b = 2 * 3;

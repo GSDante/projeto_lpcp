@@ -33,6 +33,15 @@ endToken = tokenPrim show update_pos get_token where
   get_token End = Just End
   get_token _   = Nothing
 
+beginIndexToken :: Parsec [Token] st Token
+beginIndexToken = tokenPrim show update_pos get_token where
+  get_token BeginIndex = Just BeginIndex
+  get_token _     = Nothing
+
+endIndexToken :: Parsec [Token] st Token
+endIndexToken = tokenPrim show update_pos get_token where
+  get_token EndIndex = Just EndIndex
+  get_token _     = Nothing
 beginParenthesisToken = tokenPrim show update_pos get_token where
   get_token BeginParenthesis = Just BeginParenthesis
   get_token _   = Nothing
@@ -44,6 +53,11 @@ endParenthesisToken = tokenPrim show update_pos get_token where
 semiColonToken :: Parsec [Token] st Token
 semiColonToken = tokenPrim show update_pos get_token where
   get_token SemiColon = Just SemiColon
+  get_token _         = Nothing
+
+colonToken :: Parsec [Token] st Token
+colonToken = tokenPrim show update_pos get_token where
+  get_token Colon = Just Colon
   get_token _         = Nothing
 
 assignToken = tokenPrim show update_pos get_token where
@@ -94,6 +108,29 @@ boolToken = tokenPrim show update_pos get_token where
 floatToken = tokenPrim show update_pos get_token where
   get_token (Float x) = Just (Float x)
   get_token _       = Nothing
+
+primTypeToken = intToken <|> stringToken <|> floatToken <|> boolToken
+
+arrayToken :: Parsec [Token] st [Token]
+arrayToken =
+    do
+      lbrack <- beginIndexToken
+      innercontent <- innerContentArray
+      rbrack <- endIndexToken
+      
+      return (lbrack:innercontent ++ [rbrack])
+
+-- cells :: GenParser Char st [String]
+innerContentArray = 
+    do first <- primTypeToken
+       next <- remainingContent
+       return (first: next)
+
+remainingContent =
+    try ( do a <- colonToken 
+             b <- innerContentArray
+             return (a: b)) 
+    <|> (return [])  
 
 sumToken = tokenPrim show update_pos get_token where
   get_token Sum = Just Sum
@@ -200,7 +237,11 @@ expression :: Parsec [Token] st [Token]
 expression = try( do
                   a <- expression_int
                   return (a) )
-                  <|> 
+                  <|>
+             try( do
+                  a <- arrayToken
+                  return (a) )
+                  <|>  
                   do 
                     a <- intToken <|> stringToken <|> boolToken <|> floatToken 
                     return [a]
@@ -253,6 +294,9 @@ remaining_stmts :: Parsec [Token] st [Token]
 remaining_stmts = (do a <- semiColonToken
                       b <- stmts
                       return (a:b)) <|> (return [])
+
+-- operacoes enter matrix e array
+-- cardinalidade(#), produto escalar(.*),indexação. Tipos(array e matriz)
 
 -- invocação do parser para o símbolo de partida 
 
