@@ -4,6 +4,24 @@ main {
     int x = 3;
     int y = 4;
     int z = 5;
+    while(3 > 4){
+        w = 5;
+        while(6 >= 2){
+             if(12 <= 8){
+	         z = 10;
+	     }
+	}
+	
+    };
+    
+    if(3 > 4){
+        if(8 < 9){
+            w = 5;
+        }else{
+            y = 6;
+	    }
+    };
+
     print x;
     string zeta = "ola mundo";
     bool var = True;

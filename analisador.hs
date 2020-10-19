@@ -13,6 +13,18 @@ idToken = tokenPrim show update_pos get_token where
   get_token (Id x) = Just (Id x)
   get_token _      = Nothing
 
+whileToken = tokenPrim show update_pos get_token where
+  get_token While     = Just While
+  get_token _      = Nothing
+
+ifToken = tokenPrim show update_pos get_token where
+  get_token If     = Just If
+  get_token _      = Nothing
+
+elseToken = tokenPrim show update_pos get_token where
+  get_token Else     = Just Else
+  get_token _      = Nothing
+
 beginToken = tokenPrim show update_pos get_token where
   get_token Begin = Just Begin
   get_token _     = Nothing
@@ -30,6 +42,13 @@ endIndexToken :: Parsec [Token] st Token
 endIndexToken = tokenPrim show update_pos get_token where
   get_token EndIndex = Just EndIndex
   get_token _     = Nothing
+beginParenthesisToken = tokenPrim show update_pos get_token where
+  get_token BeginParenthesis = Just BeginParenthesis
+  get_token _   = Nothing
+
+endParenthesisToken = tokenPrim show update_pos get_token where
+  get_token EndParenthesis = Just EndParenthesis
+  get_token _   = Nothing  
 
 semiColonToken :: Parsec [Token] st Token
 semiColonToken = tokenPrim show update_pos get_token where
@@ -44,6 +63,30 @@ colonToken = tokenPrim show update_pos get_token where
 assignToken = tokenPrim show update_pos get_token where
   get_token Assign = Just Assign
   get_token _      = Nothing
+
+greaterToken = tokenPrim show update_pos get_token where
+  get_token Greater = Just Greater
+  get_token _       = Nothing
+
+lessToken = tokenPrim show update_pos get_token where
+  get_token Less = Just Less
+  get_token _    = Nothing
+
+greaterEqualToken = tokenPrim show update_pos get_token where
+  get_token GreaterOrEqual = Just GreaterOrEqual
+  get_token _              = Nothing
+
+lessEqualToken = tokenPrim show update_pos get_token where
+  get_token LessOrEqual = Just LessOrEqual
+  get_token _              = Nothing
+
+equalToken = tokenPrim show update_pos get_token where
+  get_token Equal = Just Equal
+  get_token _     = Nothing
+
+diffToken = tokenPrim show update_pos get_token where
+  get_token Diff = Just Diff
+  get_token _              = Nothing
 
 printToken = tokenPrim show update_pos get_token where
   get_token Print = Just Print
@@ -147,15 +190,47 @@ stmts = try( do
           return []
 
 stmt :: Parsec [Token] st [Token]
-stmt = assign <|> print_exp
+stmt = assign <|> print_exp <|> while <|> ifs
+
+operacao_boolean :: Parsec[Token] st [Token]
+operacao_boolean = (do
+              a <- greaterToken <|> lessToken <|> greaterEqualToken <|> lessEqualToken 
+                <|> equalToken <|> diffToken
+              return [a])
+
+expressao_boolean :: Parsec[Token] st [Token]
+expressao_boolean = do
+                a <- intToken <|> idToken
+                b <- operacao_boolean
+                c <- intToken <|> idToken
+                return ([a]++b++[c])
+
+int_operation :: Parsec [Token] st [Token]
+int_operation = do
+        a <- sumToken <|> subToken <|> multToken <|> divToken <|> expToken <|> radToken <|> restoDivToken
+        return [a]
+
+
+expression_int :: Parsec [Token] st [Token]
+expression_int = do
+        a <- intToken
+        b <- int_operation
+        c <- intToken 
+        return ([a]++b++[c])
 
 assign :: Parsec [Token] st [Token]
-assign = do
+assign = try (do
           t <- typeToken
           a <- idToken
           b <- assignToken
           c <- expression
-          return (t:a:b:c)
+          return (t:a:b:c))
+          <|>
+          do
+          a <- idToken
+          b <- assignToken
+          c <- expression
+          return (a:b:c)
 
 
 expression :: Parsec [Token] st [Token]
@@ -171,25 +246,49 @@ expression = try( do
                     a <- intToken <|> stringToken <|> boolToken <|> floatToken 
                     return [a]
 
-int_operation :: Parsec [Token] st [Token]
-int_operation = do
-        a <- sumToken <|> subToken <|> multToken <|> divToken <|> expToken <|> radToken <|> restoDivToken
-        return [a]
-
-
-expression_int :: Parsec [Token] st [Token]
-expression_int = do
-        a <- intToken
-        b <- int_operation
-        c <- intToken 
-        return ([a]++b++[c])
-
 
 print_exp :: Parsec [Token] st [Token]
 print_exp = do 
         a <- printToken
         b <- idToken <|> stringToken
         return (a:[b])
+
+while :: Parsec [Token] st [Token]
+while = do
+       a <- whileToken
+       b <- beginParenthesisToken
+       c <- expressao_boolean
+       d <- endParenthesisToken
+       e <- beginToken
+       f <- stmts
+       g <- endToken
+       return (a:[b] ++ c ++ d:[e]++ f ++ [g]) <|> (return [])
+
+ifs :: Parsec [Token] st [Token]
+ifs = 
+       try (do
+         a <- ifToken
+         b <- beginParenthesisToken
+         c <- expressao_boolean
+         d <- endParenthesisToken
+         e <- beginToken
+         f <- stmts
+         g <- endToken
+         h <- elseToken
+         i <- beginToken
+         j <- stmts
+         k <- endToken
+         return (a:[b] ++ c ++ d:[e] ++ f ++ g:h:[i] ++ j ++ [k]))
+         <|>
+         (do
+           a <- ifToken
+           b <- beginParenthesisToken
+           c <- expressao_boolean
+           d <- endParenthesisToken
+           e <- beginToken
+           f <- stmts
+           g <- endToken
+           return (a:[b] ++ c ++ d:[e]++ f ++ [g])) <|> (return [])
 
 remaining_stmts :: Parsec [Token] st [Token]
 remaining_stmts = (do a <- semiColonToken
