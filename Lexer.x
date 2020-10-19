@@ -9,6 +9,7 @@ import System.IO.Unsafe
 
 $digit = 0-9      -- digits
 $alpha = [a-zA-Z]   -- alphabetic characters
+$alphanum = [a-zA-Z0-9]
 
 tokens :-
 
@@ -48,6 +49,7 @@ tokens :-
   "*"                                    { \s -> Multi}
   "%"                                    { \s -> Mod}
   "^"                                    { \s -> Pow}
+  "\-"                                   { \s -> Rad}
   "/"                                    { \s -> Div}
   "OR"                                   { \s -> Or }
   "AND"                                   { \s -> And }
@@ -58,7 +60,7 @@ tokens :-
   "True"                                 { \s -> Bool (read s) }
   "False"                                { \s -> Bool (read s) }
   $alpha+[$alpha $digit \_ \']*          { \s -> Id s }
-  \" $alpha [$alpha $digit ! \_ \']* \"  { \s -> String s}
+  \" $alphanum [$alphanum ! \_ \ \s']* \"  { \s -> String s}
 {
 -- Each action has type :: String -> Token
 
@@ -93,6 +95,7 @@ data Token =
   Mod|
   Multi|
   Pow|
+  Rad|
   Or |
   And |
   For|

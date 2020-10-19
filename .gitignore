@@ -1,3 +1,4 @@
 *.hi
 *.o
 analisador
+Lexer.hs
