@@ -1,3 +1,6 @@
+
+
+
 func bool compare (string a, string b){
    return a == b;
 }

@@ -50,6 +50,7 @@ tokens :-
   "*"                                    { \s -> Multi}
   "%"                                    { \s -> Mod}
   "^"                                    { \s -> Pow}
+  "\-"                                   { \s -> Rad}
   "/"                                    { \s -> Div}
   "OR"                                   { \s -> Or }
   "AND"                                   { \s -> And }
@@ -95,6 +96,7 @@ data Token =
   Mod|
   Multi|
   Pow|
+  Rad|
   Or |
   And |
   For|

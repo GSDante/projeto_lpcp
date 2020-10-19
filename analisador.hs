@@ -36,6 +36,11 @@ semiColonToken = tokenPrim show update_pos get_token where
   get_token SemiColon = Just SemiColon
   get_token _         = Nothing
 
+colonToken :: Parsec [Token] st Token
+colonToken = tokenPrim show update_pos get_token where
+  get_token Colon = Just Colon
+  get_token _         = Nothing
+
 assignToken = tokenPrim show update_pos get_token where
   get_token Assign = Just Assign
   get_token _      = Nothing
@@ -61,17 +66,58 @@ floatToken = tokenPrim show update_pos get_token where
   get_token (Float x) = Just (Float x)
   get_token _       = Nothing
 
+primTypeToken = intToken <|> stringToken <|> floatToken <|> boolToken
+
 arrayToken :: Parsec [Token] st [Token]
 arrayToken =
     do
       lbrack <- beginIndexToken
-      innerContent <- innerContentArray
+      innercontent <- innerContentArray
       rbrack <- endIndexToken
       
-      return (lbrack:elementtype ++ [rbrack])
+      return (lbrack:innercontent ++ [rbrack])
 
-innerContentArray = try many(string ',')
-                    <|> try many (int ',' )
+-- cells :: GenParser Char st [String]
+innerContentArray = 
+    do first <- primTypeToken
+       next <- remainingContent
+       return (first: next)
+
+remainingContent =
+    try ( do a <- colonToken 
+             b <- innerContentArray
+             return (a: b)) 
+    <|> (return [])  
+
+sumToken = tokenPrim show update_pos get_token where
+  get_token Sum = Just Sum
+  get_token _       = Nothing
+
+subToken = tokenPrim show update_pos get_token where
+  get_token Sub = Just Sub
+  get_token _       = Nothing
+
+
+multToken = tokenPrim show update_pos get_token where
+  get_token Multi = Just Multi
+  get_token _       = Nothing
+
+divToken = tokenPrim show update_pos get_token where
+  get_token Div = Just Div
+  get_token _       = Nothing
+
+expToken = tokenPrim show update_pos get_token where
+  get_token Pow = Just Pow
+  get_token _       = Nothing
+
+radToken = tokenPrim show update_pos get_token where
+  get_token Rad = Just Rad
+  get_token _       = Nothing
+
+restoDivToken = tokenPrim show update_pos get_token where
+  get_token Mod = Just Mod
+  get_token _       = Nothing
+
 
 typeToken = tokenPrim show update_pos get_token where
   get_token (Type x) = Just (Type x)
@@ -108,8 +154,36 @@ assign = do
           t <- typeToken
           a <- idToken
           b <- assignToken
-          c <- intToken <|> stringToken <|> boolToken <|> floatToken <|> arrayToken
-          return (t:a:b:[c])
+          c <- expression
+          return (t:a:b:c)
+
+
+expression :: Parsec [Token] st [Token]
+expression = try( do
+                  a <- expression_int
+                  return (a) )
+                  <|>
+             try( do
+                  a <- arrayToken
+                  return (a) )
+                  <|>  
+                  do 
+                    a <- intToken <|> stringToken <|> boolToken <|> floatToken 
+                    return [a]
+
+int_operation :: Parsec [Token] st [Token]
+int_operation = do
+        a <- sumToken <|> subToken <|> multToken <|> divToken <|> expToken <|> radToken <|> restoDivToken
+        return [a]
+
+
+expression_int :: Parsec [Token] st [Token]
+expression_int = do
+        a <- intToken
+        b <- int_operation
+        c <- intToken 
+        return ([a]++b++[c])
+
 
 print_exp :: Parsec [Token] st [Token]
 print_exp = do 
