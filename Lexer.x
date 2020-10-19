@@ -56,6 +56,7 @@ tokens :-
   "AND"                                   { \s -> And }
   for                                    { \s -> For}
   do                                     { \s -> Do }
+  in                                     { \s -> In }
   $digit+                                { \s -> Int (read s)} 
   $digit+.$digit+                        { \s -> Float (read s)}
   "True"                                 { \s -> Bool (read s) }
@@ -99,6 +100,7 @@ data Token =
   Rad|
   Or |
   And |
+  In |
   For|
   While|
   Func|

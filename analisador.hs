@@ -17,6 +17,18 @@ whileToken = tokenPrim show update_pos get_token where
   get_token While     = Just While
   get_token _      = Nothing
 
+doToken = tokenPrim show update_pos get_token where
+  get_token Do     = Just Do
+  get_token _      = Nothing
+
+forToken = tokenPrim show update_pos get_token where
+  get_token For    = Just For
+  get_token _      = Nothing
+
+inToken = tokenPrim show update_pos get_token where
+  get_token In     = Just In
+  get_token _      = Nothing
+
 ifToken = tokenPrim show update_pos get_token where
   get_token If     = Just If
   get_token _      = Nothing
@@ -190,7 +202,7 @@ stmts = try( do
           return []
 
 stmt :: Parsec [Token] st [Token]
-stmt = assign <|> print_exp <|> while <|> ifs
+stmt = assign <|> print_exp <|> while <|> dowhile <|> for <|> ifs 
 
 operacao_boolean :: Parsec[Token] st [Token]
 operacao_boolean = (do
@@ -264,12 +276,37 @@ while = do
        g <- endToken
        return (a:[b] ++ c ++ d:[e]++ f ++ [g]) <|> (return [])
 
+dowhile :: Parsec [Token] st [Token]
+dowhile = do
+       a <- doToken
+       b <- beginToken
+       c <- stmts
+       d <- endToken
+       e <- whileToken
+       f <- beginParenthesisToken
+       g <- expressao_boolean
+       h <- endParenthesisToken
+       return ([a]++[b]++c++[d]++[e]++[f]++g++[h]) <|> (return [])
+
+for :: Parsec [Token] st [Token]
+for = do
+       a <- forToken
+       b <- beginParenthesisToken
+       c <- idToken
+       d <- inToken
+       e <- idToken
+       f <- endParenthesisToken
+       g <- beginToken
+       h <- stmts
+       i <- endToken
+       return (a:b:c:d:e:f:[g]++h++[i]) <|> (return [])
+
 ifs :: Parsec [Token] st [Token]
 ifs = 
        try (do
          a <- ifToken
          b <- beginParenthesisToken
-         c <- expressao_boolean
+         c <- expressao_boolean 
          d <- endParenthesisToken
          e <- beginToken
          f <- stmts

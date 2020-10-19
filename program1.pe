@@ -7,11 +7,10 @@ main {
     while(3 > 4){
         w = 5;
         while(6 >= 2){
-             if(12 <= 8){
-	         z = 10;
-	     }
-	}
-	
+            if(12 <= 8){
+	            z = 10;
+	        }
+	    }
     };
     
     if(3 > 4){
@@ -37,5 +36,13 @@ main {
     int e = 2 ^ 2;
     int f = 2 \- 4;
     int g = 4 % 2;
+
+    do {
+        int soma = 2 + 4;
+    } while ( 1 < 2 );
+
+    for( i in lista ){
+        a = 10;
+    }
 
 }

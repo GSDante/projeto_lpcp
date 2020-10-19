@@ -160,5 +160,5 @@ main = do
 <Type> -> void | char | string | int | bool | matriz | array
 <If> -> If <Exp> Begin <Stmts> End
 <While> -> While <Exp> Begin <Stmts> End
-<Write> -> Write <Exp>
+<Write> -> Write <Var_Decl>
 <Exp> -> Id | Int | String | <Exp> Greater <Exp>
