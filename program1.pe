@@ -29,6 +29,8 @@ main {
     print "1oi";
 
     array ar = [1, 2];
+    int len = #ar;
+    int prod = ar .* ar;
 
     int a = 2 + 3;
     int b = 2 * 3;
