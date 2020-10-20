@@ -57,6 +57,7 @@ tokens :-
   for                                    { \s -> For}
   do                                     { \s -> Do }
   in                                     { \s -> In }
+  return                                 { \s -> Return }
   $digit+                                { \s -> Int (read s)} 
   $digit+.$digit+                        { \s -> Float (read s)}
   "True"                                 { \s -> Bool (read s) }
@@ -105,6 +106,7 @@ data Token =
   While|
   Func|
   Do |
+  Return |
   Type String |
   Id String |
   Int Int |

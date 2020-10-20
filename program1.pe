@@ -1,5 +1,15 @@
 
 
+func int soma( int a; int b; ){
+    int x = a + b;
+    return x;
+};
+
+func int subtracao( int a; int b; ){
+    int x = b - a;
+    return x;
+};
+
 main {
     int x = 3;
     int y = 4;
@@ -46,3 +56,4 @@ main {
     }
 
 }
+

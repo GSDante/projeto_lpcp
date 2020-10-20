@@ -9,6 +9,10 @@ programToken = tokenPrim show update_pos get_token where
   get_token Program = Just Program
   get_token _       = Nothing
 
+subprogramToken = tokenPrim show update_pos get_token where
+  get_token Func = Just Func
+  get_token _       = Nothing
+
 idToken = tokenPrim show update_pos get_token where
   get_token (Id x) = Just (Id x)
   get_token _      = Nothing
@@ -173,6 +177,10 @@ restoDivToken = tokenPrim show update_pos get_token where
   get_token Mod = Just Mod
   get_token _       = Nothing
 
+returnToken = tokenPrim show update_pos get_token where
+  get_token Return = Just Return
+  get_token _       = Nothing
+
 
 typeToken = tokenPrim show update_pos get_token where
   get_token (Type x) = Just (Type x)
@@ -186,11 +194,53 @@ update_pos pos _ []      = pos
 
 program :: Parsec [Token] st [Token]
 program = do
+            a <- subprograms 
+            b <- mainProgram
+            eof
+            return (a ++ b) 
+
+subprograms :: Parsec [Token] st [Token]
+subprograms = try (do
+          a <- subprogram
+          b <- semiColonToken
+          c <- subprograms
+          return (a ++ [b] ++ c))
+          <|> 
+          return []
+
+subprogram :: Parsec [Token] st [Token]
+subprogram = do 
+            a <- subprogramToken 
+            b <- typeToken
+            c <- idToken
+            d <- beginParenthesisToken
+            e <- parameters
+            f <- endParenthesisToken
+            g <- beginToken 
+            h <- stmts
+            i <- returnToken
+            j <- idToken
+            k <- semiColonToken
+            l <- endToken
+            return (a:b:c:[d]++e++[f]++[g]++h++[i]++[j]++[k]++[l])
+
+parameters :: Parsec [Token] st [Token]
+parameters = try (do
+            a <- typeToken
+            b <- idToken
+            c <- semiColonToken
+            d <- parameters 
+            return (a:b:[c]++d) )
+            <|>
+            return []
+
+
+mainProgram :: Parsec [Token] st [Token]
+mainProgram = do
             a <- programToken 
             b <- beginToken 
             c <- stmts
             d <- endToken
-            eof
             return (a:[b] ++ c ++ [d])
 
 stmts :: Parsec [Token] st [Token]
@@ -225,9 +275,9 @@ int_operation = do
 
 expression_int :: Parsec [Token] st [Token]
 expression_int = do
-        a <- intToken
+        a <- intToken <|> idToken
         b <- int_operation
-        c <- intToken 
+        c <- intToken <|> idToken
         return ([a]++b++[c])
 
 assign :: Parsec [Token] st [Token]
