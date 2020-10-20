@@ -105,6 +105,17 @@ boolToken = tokenPrim show update_pos get_token where
   get_token (Bool x) = Just (Bool x)
   get_token _       = Nothing
 
+
+orToken = tokenPrim show update_pos get_token where
+  get_token Or = Just Or
+  get_token _  = Nothing
+
+
+andToken = tokenPrim show update_pos get_token where
+  get_token And = Just And
+  get_token _   = Nothing
+
+
 floatToken = tokenPrim show update_pos get_token where
   get_token (Float x) = Just (Float x)
   get_token _       = Nothing
@@ -198,6 +209,22 @@ operacao_boolean = (do
                 <|> equalToken <|> diffToken
               return [a])
 
+operacao_logica :: Parsec[Token] st [Token]
+operacao_logica = (do
+                  a <- orToken <|> andToken
+                  return [a])
+
+expressao_logica :: Parsec[Token] st [Token]
+expressao_logica = try(do
+                  a <- expressao_boolean
+                  b <- operacao_logica
+                  c <- expressao_boolean 
+                  return (a++b++c))<|>try(do
+                    a <- expressao_boolean
+                    return (a))
+            
+
+
 expressao_boolean :: Parsec[Token] st [Token]
 expressao_boolean = do
                 a <- intToken <|> idToken
@@ -257,7 +284,7 @@ while :: Parsec [Token] st [Token]
 while = do
        a <- whileToken
        b <- beginParenthesisToken
-       c <- expressao_boolean
+       c <- expressao_logica
        d <- endParenthesisToken
        e <- beginToken
        f <- stmts
@@ -269,7 +296,7 @@ ifs =
        try (do
          a <- ifToken
          b <- beginParenthesisToken
-         c <- expressao_boolean
+         c <- expressao_logica  
          d <- endParenthesisToken
          e <- beginToken
          f <- stmts
@@ -283,7 +310,7 @@ ifs =
          (do
            a <- ifToken
            b <- beginParenthesisToken
-           c <- expressao_boolean
+           c <- expressao_logica 
            d <- endParenthesisToken
            e <- beginToken
            f <- stmts
