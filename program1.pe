@@ -33,6 +33,9 @@ main {
     int prod = ar .* ar;
 
     matrix m = [[1, 2], [2, 3]];
+    int index = ar[1];
+    int index2 = ar[x];
+
 
     int a = 2 + 3;
     int b = 2 * 3;
