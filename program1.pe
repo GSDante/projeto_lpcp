@@ -32,6 +32,8 @@ main {
     int len = #ar;
     int prod = ar .* ar;
 
+    matrix m = [[1, 2], [2, 3]];
+
     int a = 2 + 3;
     int b = 2 * 3;
     int c = 4 / 2;

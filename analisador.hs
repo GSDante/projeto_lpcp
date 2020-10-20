@@ -128,7 +128,7 @@ arrayToken =
 innerContentArray = 
     do first <- primTypeToken
        next <- remainingContent
-       return (first: next)
+       return ([first] ++ next)
 
 remainingContent =
     try ( do a <- commaToken 
@@ -136,25 +136,25 @@ remainingContent =
              return (a: b)) 
     <|> (return [])  
 
---matrixToken :: Parsec [Token] st [Token]
---matrixToken  =
---    do
---      lbrack <- beginIndexToken
---      innercontent <- concat innerContentMatrix
---      rbrack <- endIndexToken
+matrixToken :: Parsec [Token] st [Token]
+matrixToken  =
+    do
+      lbrack <- beginIndexToken
+      innercontent <- innerContentMatrix
+      rbrack <- endIndexToken
       
---      return (lbrack : [innercontent] ++ [rbrack])
+      return (lbrack : innercontent ++ [rbrack])
 
---innerContentMatrix = 
---    do first <- arrayToken
---       next <- remainingContentMatrix
---       return (first ++ next)
+innerContentMatrix = 
+    do first <- arrayToken
+       next <- remainingContentMatrix
+       return (first ++ next)
 
---remainingContentMatrix =
---    try ( do a <- commaToken 
---             b <- innerContentMatrix
---             return (a : b)) 
---    <|> (return [])  
+remainingContentMatrix =
+    try ( do a <- commaToken 
+             b <- innerContentMatrix
+             return (a : b)) 
+    <|> (return [])  
 
 
 sumToken = tokenPrim show update_pos get_token where
@@ -263,10 +263,10 @@ len_operation = do a <- lenToken
                    return (a:[b])
 
 inner_prod_operation :: Parsec [Token] st [Token]
-inner_prod_operation = do a <- idToken  
+inner_prod_operation = do a <- idToken
                           b <- innerProdToken
                           c <- idToken
-                          return (a:b:[c])
+                          return (a : b:[c])
                           
 
 --index_operation :: Parsec [Token] st [Token]
@@ -305,7 +305,7 @@ expression = try( do
                   return (a) )
                   <|>
              try( do
-                  a <- arrayToken
+                  a <- try arrayToken <|> matrixToken
                   return (a) )
                   <|>  
                   do 
