@@ -7,7 +7,10 @@ func int subtracao( int a; int b; ){
     int x = b - a;
     return x;
 };
-
+    Do {
+        soma = x ; y;
+    } while ( 1 < 2 )
+    
 main {
     int x = 3;
     int y = 4;

@@ -3,7 +3,7 @@
 main {
     
     Do {
-        soma = x + y;
+        soma = x ; y;
     } while ( 1 < 2 )
 
 }
