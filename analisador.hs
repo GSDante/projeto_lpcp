@@ -76,6 +76,11 @@ colonToken = tokenPrim show update_pos get_token where
   get_token Colon = Just Colon
   get_token _         = Nothing
 
+commaToken :: Parsec [Token] st Token
+commaToken = tokenPrim show update_pos get_token where
+  get_token Comma = Just Comma
+  get_token _     = Nothing
+
 assignToken = tokenPrim show update_pos get_token where
   get_token Assign = Just Assign
   get_token _      = Nothing
@@ -121,6 +126,17 @@ boolToken = tokenPrim show update_pos get_token where
   get_token (Bool x) = Just (Bool x)
   get_token _       = Nothing
 
+
+orToken = tokenPrim show update_pos get_token where
+  get_token Or = Just Or
+  get_token _  = Nothing
+
+
+andToken = tokenPrim show update_pos get_token where
+  get_token And = Just And
+  get_token _   = Nothing
+
+
 floatToken = tokenPrim show update_pos get_token where
   get_token (Float x) = Just (Float x)
   get_token _       = Nothing
@@ -136,21 +152,41 @@ arrayToken =
       
       return (lbrack:innercontent ++ [rbrack])
 
--- cells :: GenParser Char st [String]
 innerContentArray = 
     do first <- primTypeToken
        next <- remainingContent
-       return (first: next)
+       return ([first] ++ next)
 
 remainingContent =
-    try ( do a <- colonToken 
+    try ( do a <- commaToken 
              b <- innerContentArray
              return (a: b)) 
     <|> (return [])  
 
+matrixToken :: Parsec [Token] st [Token]
+matrixToken  =
+    do
+      lbrack <- beginIndexToken
+      innercontent <- innerContentMatrix
+      rbrack <- endIndexToken
+      
+      return (lbrack : innercontent ++ [rbrack])
+
+innerContentMatrix = 
+    do first <- arrayToken
+       next <- remainingContentMatrix
+       return (first ++ next)
+
+remainingContentMatrix =
+    try ( do a <- commaToken 
+             b <- innerContentMatrix
+             return (a : b)) 
+    <|> (return [])  
+
+
 sumToken = tokenPrim show update_pos get_token where
   get_token Sum = Just Sum
-  get_token _       = Nothing
+  get_token _   = Nothing
 
 subToken = tokenPrim show update_pos get_token where
   get_token Sub = Just Sub
@@ -181,6 +217,13 @@ returnToken = tokenPrim show update_pos get_token where
   get_token Return = Just Return
   get_token _       = Nothing
 
+lenToken = tokenPrim show update_pos get_token where
+  get_token Len = Just Len
+  get_token _   = Nothing
+
+innerProdToken = tokenPrim show update_pos get_token where
+  get_token InnerProd = Just InnerProd
+  get_token _         = Nothing
 
 typeToken = tokenPrim show update_pos get_token where
   get_token (Type x) = Just (Type x)
@@ -254,11 +297,29 @@ stmts = try( do
 stmt :: Parsec [Token] st [Token]
 stmt = assign <|> print_exp <|> while <|> dowhile <|> for <|> ifs 
 
+----- OPERACOES 
+-- bool
 operacao_boolean :: Parsec[Token] st [Token]
 operacao_boolean = (do
               a <- greaterToken <|> lessToken <|> greaterEqualToken <|> lessEqualToken 
                 <|> equalToken <|> diffToken
               return [a])
+
+operacao_logica :: Parsec[Token] st [Token]
+operacao_logica = (do
+                  a <- orToken <|> andToken
+                  return [a])
+
+expressao_logica :: Parsec[Token] st [Token]
+expressao_logica = try(do
+                  a <- expressao_boolean
+                  b <- operacao_logica
+                  c <- expressao_boolean 
+                  return (a++b++c))<|>try(do
+                    a <- expressao_boolean
+                    return (a))
+            
+
 
 expressao_boolean :: Parsec[Token] st [Token]
 expressao_boolean = do
@@ -267,6 +328,7 @@ expressao_boolean = do
                 c <- intToken <|> idToken
                 return ([a]++b++[c])
 
+-- int
 int_operation :: Parsec [Token] st [Token]
 int_operation = do
         a <- sumToken <|> subToken <|> multToken <|> divToken <|> expToken <|> radToken <|> restoDivToken
@@ -279,6 +341,51 @@ expression_int = do
         b <- int_operation
         c <- intToken <|> idToken
         return ([a]++b++[c])
+
+-- array, matrix
+array_expression :: Parsec [Token] st [Token]
+array_expression = len_operation <|> try inner_prod_operation <|> try index_operation
+
+len_operation :: Parsec [Token] st [Token]
+len_operation = do a <- lenToken
+                   b <- idToken
+                   return (a:[b])
+
+inner_prod_operation :: Parsec [Token] st [Token]
+inner_prod_operation = do a <- idToken
+                          b <- innerProdToken
+                          c <- idToken
+                          return (a : b:[c])
+                          
+
+index_operation :: Parsec [Token] st [Token]
+index_operation = try (do a <- idToken
+                          b <- beginIndexToken
+                          c <- primTypeToken <|> idToken
+                          d <- endIndexToken
+                          return (a: b: c : [d]))
+                     <|>
+                     do a <- idToken
+                        b <- beginIndexToken
+                        c <- index_expression
+                        d <- endIndexToken
+                        return (a: b: c ++ [d])
+
+-- [1], [1:1], [1:1, 1:1], [1,1], 
+index_expression =  try slice_expression <|> arrayToken
+
+slice_expression :: Parsec [Token] st [Token]
+slice_expression = do a <- intToken 
+                      b <- colonToken
+                      c <- intToken 
+                      d <- remaining_slice
+                      return (a:b:c:d)
+
+remaining_slice = try (do a <- commaToken
+                          b <- slice_expression 
+                          return (a: b))
+                  <|> return []
+
 
 assign :: Parsec [Token] st [Token]
 assign = try (do
@@ -297,11 +404,15 @@ assign = try (do
 
 expression :: Parsec [Token] st [Token]
 expression = try( do
+                  a <- array_expression
+                  return (a) )
+                  <|>
+             try( do
                   a <- expression_int
                   return (a) )
                   <|>
              try( do
-                  a <- arrayToken
+                  a <- try arrayToken <|> matrixToken
                   return (a) )
                   <|>  
                   do 
@@ -319,7 +430,7 @@ while :: Parsec [Token] st [Token]
 while = do
        a <- whileToken
        b <- beginParenthesisToken
-       c <- expressao_boolean
+       c <- expressao_logica
        d <- endParenthesisToken
        e <- beginToken
        f <- stmts
@@ -356,7 +467,7 @@ ifs =
        try (do
          a <- ifToken
          b <- beginParenthesisToken
-         c <- expressao_boolean 
+         c <- expressao_logica  
          d <- endParenthesisToken
          e <- beginToken
          f <- stmts
@@ -370,7 +481,7 @@ ifs =
          (do
            a <- ifToken
            b <- beginParenthesisToken
-           c <- expressao_boolean
+           c <- expressao_logica 
            d <- endParenthesisToken
            e <- beginToken
            f <- stmts
@@ -381,9 +492,6 @@ remaining_stmts :: Parsec [Token] st [Token]
 remaining_stmts = (do a <- semiColonToken
                       b <- stmts
                       return (a:b)) <|> (return [])
-
--- operacoes enter matrix e array
--- cardinalidade(#), produto escalar(.*),indexação. Tipos(array e matriz)
 
 -- invocação do parser para o símbolo de partida 
 

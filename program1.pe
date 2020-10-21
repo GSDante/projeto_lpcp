@@ -1,5 +1,3 @@
-
-
 func int soma( int a; int b; ){
     int x = a + b;
     return x;
@@ -14,7 +12,7 @@ main {
     int x = 3;
     int y = 4;
     int z = 5;
-    while(3 > 4){
+    while(3 > 4 OR 5 < z){
         w = 5;
         while(6 >= 2){
             if(12 <= 8){
@@ -23,8 +21,8 @@ main {
 	    }
     };
     
-    if(3 > 4){
-        if(8 < 9){
+    if(3 > 4 OR 2 < 5){
+        if(8 < 9 AND 4 == y){
             w = 5;
         }else{
             y = 6;
@@ -37,7 +35,16 @@ main {
     float w = 2.3;
     print "1oi";
 
-    array ar = [1, 2];
+    array ar = [1, "2"];
+    int len = #ar;
+    int prod = ar .* ar;
+
+    matrix m = [[1, 2], [2, 3]];
+    int index = ar[1];
+    int index2 = ar[x];
+    int index3 = ar[[1, 0]];
+
+    int index4 = m[1: 1 , 2: 2];
 
     int a = 2 + 3;
     int b = 2 * 3;

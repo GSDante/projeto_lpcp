@@ -19,12 +19,14 @@ tokens :-
   "{"                                    { \s -> Begin}
   "}"                                    { \s -> End}
   ";"                                    { \s -> SemiColon}
-  ","                                    { \s -> Colon}
+  ":"                                    { \s -> Colon}
+  ","                                    { \s -> Comma}
   int                                    { \s -> Type s}
   float                                  { \s -> Type s}
   bool                                   { \s -> Type s}
   string                                 { \s -> Type s}
   array                                  { \s -> Type s}
+  matrix                                 { \s -> Type s}
   =                                      { \s -> Assign}
   "("				                             { \s -> BeginParenthesis}
   ")"				                             { \s -> EndParenthesis}
@@ -52,8 +54,10 @@ tokens :-
   "^"                                    { \s -> Pow}
   "\-"                                   { \s -> Rad}
   "/"                                    { \s -> Div}
+  "#"                                    { \s -> Len} 
+  ".*"                                   { \s -> InnerProd} 
   "OR"                                   { \s -> Or }
-  "AND"                                   { \s -> And }
+  "AND"                                  { \s -> And }
   for                                    { \s -> For}
   do                                     { \s -> Do }
   in                                     { \s -> In }
@@ -78,6 +82,7 @@ data Token =
   EndIndex |
   SemiColon |
   Colon |
+  Comma |
   Assign    | 
   If  |
   Else |
@@ -99,6 +104,8 @@ data Token =
   Multi|
   Pow|
   Rad|
+  Len |
+  InnerProd |
   Or |
   And |
   In |
