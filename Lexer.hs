@@ -14,9 +14,260 @@ import System.IO.Unsafe
 #endif
 #if __GLASGOW_HASKELL__ >= 503
 import Data.Array
+import Data.Array.Base (unsafeAt)
 #else
 import Array
 #endif
+{-# LINE 1 "templates/wrappers.hs" #-}
+{-# LINE 1 "templates/wrappers.hs" #-}
+{-# LINE 1 "<built-in>" #-}
+{-# LINE 1 "<command-line>" #-}
+{-# LINE 9 "<command-line>" #-}
+# 1 "/usr/include/stdc-predef.h" 1 3 4
+
+# 17 "/usr/include/stdc-predef.h" 3 4
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+{-# LINE 9 "<command-line>" #-}
+{-# LINE 1 "/usr/lib/ghc/include/ghcversion.h" #-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+{-# LINE 9 "<command-line>" #-}
+{-# LINE 1 "/tmp/ghc5f56_0/ghc_2.h" #-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+{-# LINE 9 "<command-line>" #-}
 {-# LINE 1 "templates/wrappers.hs" #-}
 -- -----------------------------------------------------------------------------
 -- Alex wrapper code.
@@ -28,52 +279,33 @@ import Array
 
 
 
+
 import Data.Word (Word8)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+{-# LINE 28 "templates/wrappers.hs" #-}
 
 import Data.Char (ord)
 import qualified Data.Bits
 
 -- | Encode a Haskell String to a list of Word8 values, in UTF8 format.
 utf8Encode :: Char -> [Word8]
-utf8Encode = uncurry (:) . utf8Encode'
-
-utf8Encode' :: Char -> (Word8, [Word8])
-utf8Encode' c = case go (ord c) of
-                  (x, xs) -> (fromIntegral x, map fromIntegral xs)
+utf8Encode = map fromIntegral . go . ord
  where
   go oc
-   | oc <= 0x7f       = ( oc
-                        , [
-                        ])
+   | oc <= 0x7f       = [oc]
 
-   | oc <= 0x7ff      = ( 0xc0 + (oc `Data.Bits.shiftR` 6)
-                        , [0x80 + oc Data.Bits..&. 0x3f
-                        ])
-
-   | oc <= 0xffff     = ( 0xe0 + (oc `Data.Bits.shiftR` 12)
-                        , [0x80 + ((oc `Data.Bits.shiftR` 6) Data.Bits..&. 0x3f)
+   | oc <= 0x7ff      = [ 0xc0 + (oc `Data.Bits.shiftR` 6)
                         , 0x80 + oc Data.Bits..&. 0x3f
-                        ])
-   | otherwise        = ( 0xf0 + (oc `Data.Bits.shiftR` 18)
-                        , [0x80 + ((oc `Data.Bits.shiftR` 12) Data.Bits..&. 0x3f)
+                        ]
+
+   | oc <= 0xffff     = [ 0xe0 + (oc `Data.Bits.shiftR` 12)
                         , 0x80 + ((oc `Data.Bits.shiftR` 6) Data.Bits..&. 0x3f)
                         , 0x80 + oc Data.Bits..&. 0x3f
-                        ])
+                        ]
+   | otherwise        = [ 0xf0 + (oc `Data.Bits.shiftR` 18)
+                        , 0x80 + ((oc `Data.Bits.shiftR` 12) Data.Bits..&. 0x3f)
+                        , 0x80 + ((oc `Data.Bits.shiftR` 6) Data.Bits..&. 0x3f)
+                        , 0x80 + oc Data.Bits..&. 0x3f
+                        ]
 
 
 
@@ -83,83 +315,30 @@ type Byte = Word8
 -- The input type
 
 
+type AlexInput = (AlexPosn,     -- current position,
+                  Char,         -- previous char
+                  [Byte],       -- pending bytes on current char
+                  String)       -- current input string
 
+ignorePendingBytes :: AlexInput -> AlexInput
+ignorePendingBytes (p,c,_ps,s) = (p,c,[],s)
 
+alexInputPrevChar :: AlexInput -> Char
+alexInputPrevChar (_p,c,_bs,_s) = c
 
+alexGetByte :: AlexInput -> Maybe (Byte,AlexInput)
+alexGetByte (p,c,(b:bs),s) = Just (b,(p,c,bs,s))
+alexGetByte (_,_,[],[]) = Nothing
+alexGetByte (p,_,[],(c:s))  = let p' = alexMove p c
+                                  (b:bs) = utf8Encode c
+                              in p' `seq`  Just (b, (p', c, bs, s))
 
 
+{-# LINE 102 "templates/wrappers.hs" #-}
 
+{-# LINE 120 "templates/wrappers.hs" #-}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+{-# LINE 138 "templates/wrappers.hs" #-}
 
 -- -----------------------------------------------------------------------------
 -- Token positions
@@ -172,231 +351,42 @@ type Byte = Word8
 -- assuming the usual eight character tab stops.
 
 
+data AlexPosn = AlexPn !Int !Int !Int
+        deriving (Eq,Show)
 
+alexStartPos :: AlexPosn
+alexStartPos = AlexPn 0 1 1
 
-
-
-
-
-
-
-
-
+alexMove :: AlexPosn -> Char -> AlexPosn
+alexMove (AlexPn a l c) '\t' = AlexPn (a+1)  l     (((c+alex_tab_size-1) `div` alex_tab_size)*alex_tab_size+1)
+alexMove (AlexPn a l _) '\n' = AlexPn (a+1) (l+1)   1
+alexMove (AlexPn a l c) _    = AlexPn (a+1)  l     (c+1)
 
 
 -- -----------------------------------------------------------------------------
--- Monad (default and with ByteString input)
+-- Default monad
 
+{-# LINE 274 "templates/wrappers.hs" #-}
 
 
+-- -----------------------------------------------------------------------------
+-- Monad (with ByteString input)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+{-# LINE 379 "templates/wrappers.hs" #-}
 
 
 -- -----------------------------------------------------------------------------
 -- Basic wrapper
 
-
-type AlexInput = (Char,[Byte],String)
-
-alexInputPrevChar :: AlexInput -> Char
-alexInputPrevChar (c,_,_) = c
-
--- alexScanTokens :: String -> [token]
-alexScanTokens str = go ('\n',[],str)
-  where go inp__@(_,_bs,s) =
-          case alexScan inp__ 0 of
-                AlexEOF -> []
-                AlexError _ -> error "lexical error"
-                AlexSkip  inp__' _ln     -> go inp__'
-                AlexToken inp__' len act -> act (take len s) : go inp__'
-
-alexGetByte :: AlexInput -> Maybe (Byte,AlexInput)
-alexGetByte (c,(b:bs),s) = Just (b,(c,bs,s))
-alexGetByte (_,[],[])    = Nothing
-alexGetByte (_,[],(c:s)) = case utf8Encode' c of
-                             (b, bs) -> Just (b, (c, bs, s))
-
+{-# LINE 406 "templates/wrappers.hs" #-}
 
 
 -- -----------------------------------------------------------------------------
 -- Basic wrapper, ByteString version
 
+{-# LINE 425 "templates/wrappers.hs" #-}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+{-# LINE 440 "templates/wrappers.hs" #-}
 
 
 -- -----------------------------------------------------------------------------
@@ -405,50 +395,27 @@ alexGetByte (_,[],(c:s)) = case utf8Encode' c of
 -- Adds text positions to the basic model.
 
 
-
-
-
-
-
-
-
-
+--alexScanTokens :: String -> [token]
+alexScanTokens str0 = go (alexStartPos,'\n',[],str0)
+  where go inp__@(pos,_,_,str) =
+          case alexScan inp__ 0 of
+                AlexEOF -> []
+                AlexError ((AlexPn _ line column),_,_,_) -> error $ "lexical error at line " ++ (show line) ++ ", column " ++ (show column)
+                AlexSkip  inp__' _ln     -> go inp__'
+                AlexToken inp__' len act -> act pos (take len str) : go inp__'
 
 
 
 -- -----------------------------------------------------------------------------
 -- Posn wrapper, ByteString version
 
-
-
-
-
-
-
-
-
-
-
-
+{-# LINE 473 "templates/wrappers.hs" #-}
 
 
 -- -----------------------------------------------------------------------------
 -- GScan wrapper
 
 -- For compatibility with previous versions of Alex, and because we can.
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 alex_tab_size :: Int
 alex_tab_size = 8
@@ -17507,115 +17474,366 @@ alex_actions = array (0 :: Int, 106)
 
 -- The token type:
 data Token =
-  Program |
-  Begin   |
-  End     |
-  BeginParenthesis |
-  EndParenthesis |
-  BeginIndex |
-  EndIndex |
-  SemiColon |
-  Colon |
-  Comma |
-  Assign    | 
-  If  |
-  Else |
-  Print |
-  Greater |
-  Increment |
-  Decrement|
-  MultEqual |
-  DivEqual |
-  GreaterOrEqual |
-  Less|
-  LessOrEqual |
-  Equal |
-  Diff |
-  Sum |
-  Sub|
-  Div|
-  Mod|
-  Multi|
-  Pow|
-  Rad|
-  Len |
-  InnerProd |
-  Or |
-  And |
-  In |
-  For|
-  While|
-  Func|
-  Do |
-  Return |
-  Type String |
-  Id String |
-  Int Int |
-  Float Float|
-  Bool Bool |
-  String String  
+  Program  AlexPosn|
+  Begin    AlexPosn|
+  End      AlexPosn|
+  BeginParenthesis  AlexPosn|
+  EndParenthesis AlexPosn|
+  BeginIndex AlexPosn|
+  EndIndex AlexPosn|
+  SemiColon AlexPosn|
+  Colon AlexPosn|
+  Comma AlexPosn|
+  Assign    AlexPosn| 
+  If  AlexPosn|
+  Else AlexPosn|
+  Print AlexPosn|
+  Greater AlexPosn|
+  Increment AlexPosn|
+  Decrement AlexPosn|
+  MultEqual AlexPosn|
+  DivEqual AlexPosn|
+  GreaterOrEqual AlexPosn|
+  Less AlexPosn|
+  LessOrEqual AlexPosn|
+  Equal AlexPosn|
+  Diff AlexPosn|
+  Sum AlexPosn|
+  Sub AlexPosn|
+  Div AlexPosn|
+  Mod AlexPosn|
+  Multi AlexPosn|
+  Pow AlexPosn|
+  Rad AlexPosn|
+  Len AlexPosn|
+  InnerProd AlexPosn|
+  Or AlexPosn|
+  And AlexPosn|
+  In AlexPosn|
+  For AlexPosn|
+  While AlexPosn|
+  Func AlexPosn|
+  Do  AlexPosn|
+  Return  AlexPosn|
+  Type AlexPosn String |
+  Id AlexPosn String |
+  Int AlexPosn Int |
+  Float AlexPosn Float|
+  Bool AlexPosn Bool |
+  String AlexPosn String  
   deriving (Eq,Show)
 
 
+ 
 getTokens fn = unsafePerformIO (getTokensAux fn)
 
 getTokensAux fn = do {fh <- openFile fn ReadMode;
                       s <- hGetContents fh;
                       return (alexScanTokens s)}
 
-alex_action_2 =  \s -> Program 
-alex_action_3 =  \s -> Begin
-alex_action_4 =  \s -> End
-alex_action_5 =  \s -> SemiColon
-alex_action_6 =  \s -> Colon
-alex_action_7 =  \s -> Comma
-alex_action_8 =  \s -> Type s
-alex_action_9 =  \s -> Type s
-alex_action_10 =  \s -> Type s
-alex_action_11 =  \s -> Type s
-alex_action_12 =  \s -> Type s
-alex_action_13 =  \s -> Type s
-alex_action_14 =  \s -> Assign
-alex_action_15 =  \s -> BeginParenthesis
-alex_action_16 =  \s -> EndParenthesis
-alex_action_17 =  \s -> BeginIndex
-alex_action_18 =  \s -> EndIndex
-alex_action_19 =  \s -> If
-alex_action_20 =  \s -> Else
-alex_action_21 =  \s -> Print
-alex_action_22 =  \s -> While
-alex_action_23 =  \s -> Func
-alex_action_24 =  \s -> Greater
-alex_action_25 =  \s -> Less
-alex_action_26 =  \s -> GreaterOrEqual
-alex_action_27 =  \s -> LessOrEqual
-alex_action_28 =  \s -> Equal
-alex_action_29 =  \s -> Diff
-alex_action_30 =  \s -> Sum
-alex_action_31 =  \s -> Increment
-alex_action_32 =  \s -> Decrement
-alex_action_33 =  \s -> MultEqual
-alex_action_34 =  \s -> DivEqual
-alex_action_35 =  \s -> Sub
-alex_action_36 =  \s -> Multi
-alex_action_37 =  \s -> Mod
-alex_action_38 =  \s -> Pow
-alex_action_39 =  \s -> Rad
-alex_action_40 =  \s -> Div
-alex_action_41 =  \s -> Len
-alex_action_42 =  \s -> InnerProd
-alex_action_43 =  \s -> Or 
-alex_action_44 =  \s -> And 
-alex_action_45 =  \s -> For
-alex_action_46 =  \s -> Do 
-alex_action_47 =  \s -> In 
-alex_action_48 =  \s -> Return 
-alex_action_49 =  \s -> Int (read s)
-alex_action_50 =  \s -> Float (read s)
-alex_action_51 =  \s -> Bool (read s) 
-alex_action_52 =  \s -> Bool (read s) 
-alex_action_53 =  \s -> Id s 
-alex_action_54 =  \s -> String s
+alex_action_2 =  \p s -> Program p 
+alex_action_3 =  \p s -> Begin p
+alex_action_4 =  \p s -> End p
+alex_action_5 =  \p s -> SemiColon p
+alex_action_6 =  \p s -> Colon p
+alex_action_7 =  \p s -> Comma p
+alex_action_8 =  \p s -> Type p s
+alex_action_9 =  \p s -> Type p s
+alex_action_10 =  \p s -> Type p s
+alex_action_11 =  \p s -> Type p s
+alex_action_12 =  \p s -> Type p s
+alex_action_13 =  \p s -> Type p s
+alex_action_14 =  \p s -> Assign p
+alex_action_15 =  \p s-> BeginParenthesis p
+alex_action_16 =  \p s-> EndParenthesis p
+alex_action_17 =  \p s-> BeginIndex p
+alex_action_18 =  \p s-> EndIndex p
+alex_action_19 =  \p s -> If p
+alex_action_20 =  \p s -> Else p
+alex_action_21 =  \p s -> Print p
+alex_action_22 =  \p s -> While p
+alex_action_23 =  \p s -> Func p
+alex_action_24 =  \p s -> Greater p
+alex_action_25 =  \p s -> Less p
+alex_action_26 =  \p s -> GreaterOrEqual p
+alex_action_27 =  \p s -> LessOrEqual p
+alex_action_28 =  \p s -> Equal p
+alex_action_29 =  \p s -> Diff p
+alex_action_30 =  \p s -> Sum p
+alex_action_31 =  \p s -> Increment p
+alex_action_32 =  \p s -> Decrement p
+alex_action_33 =  \p s -> MultEqual p
+alex_action_34 =  \p s -> DivEqual p
+alex_action_35 =  \p s -> Sub p
+alex_action_36 =  \p s -> Multi p
+alex_action_37 =  \p s -> Mod p
+alex_action_38 =  \p s -> Pow p
+alex_action_39 =  \p s -> Rad p
+alex_action_40 =  \p s -> Div p
+alex_action_41 =  \p s -> Len p
+alex_action_42 =  \p s -> InnerProd p
+alex_action_43 =  \p s -> Or  p
+alex_action_44 =  \p s -> And  p
+alex_action_45 =  \p s -> For p
+alex_action_46 =  \p s -> Do  p
+alex_action_47 =  \p s -> In  p
+alex_action_48 =  \p s -> Return  p
+alex_action_49 =  \p s -> Int p(read s)
+alex_action_50 =  \p s -> Float p(read s)
+alex_action_51 =  \p s -> Bool p(read s) 
+alex_action_52 =  \p s -> Bool p(read s) 
+alex_action_53 =  \p s -> Id p s 
+alex_action_54 =  \p s -> String p(read s)
+{-# LINE 1 "templates/GenericTemplate.hs" #-}
+{-# LINE 1 "templates/GenericTemplate.hs" #-}
+{-# LINE 1 "<built-in>" #-}
+{-# LINE 1 "<command-line>" #-}
+{-# LINE 8 "<command-line>" #-}
+# 1 "/usr/include/stdc-predef.h" 1 3 4
+
+# 17 "/usr/include/stdc-predef.h" 3 4
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+{-# LINE 8 "<command-line>" #-}
+{-# LINE 1 "/usr/lib/ghc/include/ghcversion.h" #-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+{-# LINE 8 "<command-line>" #-}
+{-# LINE 1 "/tmp/ghc8a9b_0/ghc_2.h" #-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+{-# LINE 8 "<command-line>" #-}
 {-# LINE 1 "templates/GenericTemplate.hs" #-}
 -- -----------------------------------------------------------------------------
 -- ALEX TEMPLATE
@@ -17626,101 +17844,19 @@ alex_action_54 =  \s -> String s
 -- -----------------------------------------------------------------------------
 -- INTERNALS and main scanner engine
 
+{-# LINE 21 "templates/GenericTemplate.hs" #-}
 
+{-# LINE 51 "templates/GenericTemplate.hs" #-}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+{-# LINE 72 "templates/GenericTemplate.hs" #-}
 alexIndexInt16OffAddr arr off = arr ! off
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+{-# LINE 93 "templates/GenericTemplate.hs" #-}
 alexIndexInt32OffAddr arr off = arr ! off
 
 
-
-
-
-
-
-
-
-
-
+{-# LINE 105 "templates/GenericTemplate.hs" #-}
 quickIndex arr i = arr ! i
 
 
@@ -17852,4 +17988,3 @@ alexRightContext (sc) user__ _ _ input__ =
         -- TODO: there's no need to find the longest
         -- match when checking the right context, just
         -- the first match will do.
-
