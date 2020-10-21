@@ -15,6 +15,7 @@ func void foo (){
     print "aa";
 }
 
+    
 main {
     int x = 3;
     int y = 4;
@@ -61,6 +62,11 @@ main {
     int f = 2 \- 4;
     int g = 4 % 2;
 
+    string str1 = "ola " + "mundo";
+    int str2 = lenght("ola");
+    string str3 = substr("ola mundo", 1, 2);
+
+
     do {
         int soma = 2 + 4;
         soma = soma(2, e);
@@ -70,6 +76,7 @@ main {
         a = 10;
         foo();
     }
+
 
 }
 

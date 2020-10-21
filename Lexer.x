@@ -5,7 +5,7 @@ import System.IO
 import System.IO.Unsafe
 }
 
-%wrapper "basic"
+%wrapper "posn"
 
 $digit = 0-9      -- digits
 $alpha = [a-zA-Z]   -- alphabetic characters
@@ -15,115 +15,120 @@ tokens :-
 
   $white+                                ;
   "--".*                                 ;
-  main                                { \s -> Program }
-  "{"                                    { \s -> Begin}
-  "}"                                    { \s -> End}
-  ";"                                    { \s -> SemiColon}
-  ":"                                    { \s -> Colon}
-  ","                                    { \s -> Comma}
-  void                                   { \s -> Type s}
-  int                                    { \s -> Type s}
-  float                                  { \s -> Type s}
-  bool                                   { \s -> Type s}
-  string                                 { \s -> Type s}
-  array                                  { \s -> Type s}
-  matrix                                 { \s -> Type s}
-  =                                      { \s -> Assign}
-  "("				                             { \s -> BeginParenthesis}
-  ")"				                             { \s -> EndParenthesis}
-  "["                                    { \s -> BeginIndex}
-  "]"                                    { \s -> EndIndex}
-  if                                     { \s -> If}
-  else                                   { \s -> Else}
-  print                                  { \s -> Print}
-  while                                  { \s -> While}
-  func                                   { \s -> Func}
-  >                                      { \s -> Greater}
-  "<"                                    { \s -> Less}
-  ">="                                   { \s -> GreaterOrEqual}
-  "<="                                   { \s -> LessOrEqual}
-  "=="                                   { \s -> Equal}
-  "!="                                   { \s -> Diff}
-  "+"                                    { \s -> Sum}
-  "+="                                   { \s -> Increment}
-  "-="                                   { \s -> Decrement}
-  "*="                                   { \s -> MultEqual}
-  "/="                                   { \s -> DivEqual}
-  "-"                                    { \s -> Sub}
-  "*"                                    { \s -> Multi}
-  "%"                                    { \s -> Mod}
-  "^"                                    { \s -> Pow}
-  "\-"                                   { \s -> Rad}
-  "/"                                    { \s -> Div}
-  "#"                                    { \s -> Len} 
-  ".*"                                   { \s -> InnerProd} 
-  "OR"                                   { \s -> Or }
-  "AND"                                  { \s -> And }
-  for                                    { \s -> For}
-  do                                     { \s -> Do }
-  in                                     { \s -> In }
-  return                                 { \s -> Return }
-  $digit+                                { \s -> Int (read s)} 
-  $digit+.$digit+                        { \s -> Float (read s)}
-  "True"                                 { \s -> Bool (read s) }
-  "False"                                { \s -> Bool (read s) }
-  $alpha+[$alpha $digit \_ \']*          { \s -> Id s }
-  \" $alphanum [$alphanum ! \_ \ \s']* \"  { \s -> String s}
+  main                                { \p s -> Program p }
+  "{"                                    { \p s -> Begin p}
+  "}"                                    { \p s -> End p}
+  ";"                                    { \p s -> SemiColon p}
+  ":"                                    { \p s -> Colon p}
+  ","                                    { \p s -> Comma p}
+  void                                   { \p s -> Type p s}
+  int                                    { \p s -> Type p s}
+  float                                  { \p s -> Type p s}
+  bool                                   { \p s -> Type p s}
+  string                                 { \p s -> Type p s}
+  array                                  { \p s -> Type p s}
+  matrix                                 { \p s -> Type p s}
+  =                                      { \p s -> Assign p}
+  "("				                             { \p s-> BeginParenthesis p}
+  ")"				                             { \p s-> EndParenthesis p}
+  "["                                    { \p s-> BeginIndex p}
+  "]"                                    { \p s-> EndIndex p}
+  if                                     { \p s -> If p}
+  else                                   { \p s -> Else p}
+  print                                  { \p s -> Print p}
+  while                                  { \p s -> While p}
+  func                                   { \p s -> Func p}
+  >                                      { \p s -> Greater p}
+  "<"                                    { \p s -> Less p}
+  ">="                                   { \p s -> GreaterOrEqual p}
+  "<="                                   { \p s -> LessOrEqual p}
+  "=="                                   { \p s -> Equal p}
+  "!="                                   { \p s -> Diff p}
+  "+"                                    { \p s -> Sum p}
+  "+="                                   { \p s -> Increment p}
+  "-="                                   { \p s -> Decrement p}
+  "*="                                   { \p s -> MultEqual p}
+  "/="                                   { \p s -> DivEqual p}
+  "-"                                    { \p s -> Sub p}
+  "*"                                    { \p s -> Multi p}
+  "%"                                    { \p s -> Mod p}
+  "^"                                    { \p s -> Pow p}
+  "\-"                                   { \p s -> Rad p}
+  "/"                                    { \p s -> Div p}
+  "#"                                    { \p s -> Len p} 
+  ".*"                                   { \p s -> InnerProd p} 
+  "OR"                                   { \p s -> Or  p}
+  "AND"                                  { \p s -> And  p}
+  lenght                                 { \p s -> Lenght p}
+  substr                                 { \p s -> Substr p}
+  for                                    { \p s -> For p}
+  do                                     { \p s -> Do  p}
+  in                                     { \p s -> In  p}
+  return                                 { \p s -> Return  p}
+  $digit+                                { \p s -> Int p(read s)} 
+  $digit+.$digit+                        { \p s -> Float p(read s)}
+  "True"                                 { \p s -> Bool p(read s) }
+  "False"                                { \p s -> Bool p(read s) }
+  $alpha+[$alpha $digit \_ \']*          { \p s -> Id p s }
+  \" $alphanum [$alphanum ! \_ \ \p s']* \"  { \p s -> String p(read s)}
 {
 -- Each action has type :: String -> Token
 
 -- The token type:
 data Token =
-  Program |
-  Begin   |
-  End     |
-  BeginParenthesis |
-  EndParenthesis |
-  BeginIndex |
-  EndIndex |
-  SemiColon |
-  Colon |
-  Comma |
-  Assign    | 
-  If  |
-  Else |
-  Print |
-  Greater |
-  Increment |
-  Decrement|
-  MultEqual |
-  DivEqual |
-  GreaterOrEqual |
-  Less|
-  LessOrEqual |
-  Equal |
-  Diff |
-  Sum |
-  Sub|
-  Div|
-  Mod|
-  Multi|
-  Pow|
-  Rad|
-  Len |
-  InnerProd |
-  Or |
-  And |
-  In |
-  For|
-  While|
-  Func|
-  Do |
-  Return |
-  Type String |
-  Id String |
-  Int Int |
-  Float Float|
-  Bool Bool |
-  String String  
+  Program  AlexPosn|
+  Begin    AlexPosn|
+  End      AlexPosn|
+  BeginParenthesis  AlexPosn|
+  EndParenthesis AlexPosn|
+  BeginIndex AlexPosn|
+  EndIndex AlexPosn|
+  SemiColon AlexPosn|
+  Colon AlexPosn|
+  Comma AlexPosn|
+  Assign    AlexPosn| 
+  If  AlexPosn|
+  Else AlexPosn|
+  Print AlexPosn|
+  Greater AlexPosn|
+  Increment AlexPosn|
+  Decrement AlexPosn|
+  MultEqual AlexPosn|
+  DivEqual AlexPosn|
+  GreaterOrEqual AlexPosn|
+  Less AlexPosn|
+  LessOrEqual AlexPosn|
+  Equal AlexPosn|
+  Diff AlexPosn|
+  Sum AlexPosn|
+  Sub AlexPosn|
+  Div AlexPosn|
+  Mod AlexPosn|
+  Multi AlexPosn|
+  Pow AlexPosn|
+  Rad AlexPosn|
+  Len AlexPosn|
+  InnerProd AlexPosn|
+  Or AlexPosn|
+  And AlexPosn|
+  Lenght AlexPosn|
+  Substr AlexPosn|
+  In AlexPosn|
+  For AlexPosn|
+  While AlexPosn|
+  Func AlexPosn|
+  Do  AlexPosn|
+  Return  AlexPosn|
+  Type AlexPosn String |
+  Id AlexPosn String |
+  Int AlexPosn Int |
+  Float AlexPosn Float|
+  Bool AlexPosn Bool |
+  String AlexPosn String  
   deriving (Eq,Show)
 
 
+ 
 getTokens fn = unsafePerformIO (getTokensAux fn)
 
 getTokensAux fn = do {fh <- openFile fn ReadMode;
