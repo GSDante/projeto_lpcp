@@ -295,7 +295,29 @@ stmts = try( do
           return []
 
 stmt :: Parsec [Token] st [Token]
-stmt = assign <|> print_exp <|> while <|> dowhile <|> for <|> ifs 
+stmt = try assign <|> try invoking_expression <|> print_exp <|> while <|> 
+       dowhile <|> for <|> ifs 
+
+
+invoking_expression = do a <- idToken
+                         b <- beginParenthesisToken
+                         c <- parameters_invoke
+                         d <- endParenthesisToken
+                         return (a:b:c ++ [d])
+
+
+parameters_invoke :: Parsec [Token] st [Token]
+parameters_invoke = try (do
+            a <- idToken <|> primTypeToken
+            b <- remaining_parameters
+            return (a:b) )
+            <|>
+            return []
+
+remaining_parameters = try (do a <- commaToken 
+                               b <- parameters_invoke 
+                               return (a:b))
+                               <|> return []
 
 ----- OPERACOES 
 -- bool
@@ -404,11 +426,7 @@ assign = try (do
 
 expression :: Parsec [Token] st [Token]
 expression = try( do
-                  a <- array_expression
-                  return (a) )
-                  <|>
-             try( do
-                  a <- expression_int
+                  a <- try array_expression <|> try expression_int <|> invoking_expression
                   return (a) )
                   <|>
              try( do

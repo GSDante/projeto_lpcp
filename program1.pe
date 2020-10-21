@@ -56,10 +56,12 @@ main {
 
     do {
         int soma = 2 + 4;
+        soma = soma(2, 4);
     } while ( 1 < 2 );
 
     for( i in lista ){
         a = 10;
+        foo();
     }
 
 }
