@@ -56,7 +56,7 @@ main {
 
     do {
         int soma = 2 + 4;
-        soma = soma(2, 4);
+        soma = soma(2, e);
     } while ( 1 < 2 );
 
     for( i in lista ){
