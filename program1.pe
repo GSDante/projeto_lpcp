@@ -1,3 +1,16 @@
+func int soma( int a; int b; ){
+    int x = a + b;
+    return x;
+};
+
+func int subtracao( int a; int b; ){
+    int x = b - a;
+    return x;
+};
+    Do {
+        soma = x ; y;
+    } while ( 1 < 2 )
+    
 main {
     int x = 3;
     int y = 4;
@@ -5,11 +18,10 @@ main {
     while(3 > 4 OR 5 < z){
         w = 5;
         while(6 >= 2){
-             if(12 <= 8){
-	         z = 10;
-	     }
-	}
-	
+            if(12 <= 8){
+	            z = 10;
+	        }
+	    }
     };
     
     if(3 > 4 OR 2 < 5){
@@ -26,7 +38,16 @@ main {
     float w = 2.3;
     print "1oi";
 
-    array ar = [1, 2];
+    array ar = [1, "2"];
+    int len = #ar;
+    int prod = ar .* ar;
+
+    matrix m = [[1, 2], [2, 3]];
+    int index = ar[1];
+    int index2 = ar[x];
+    int index3 = ar[[1, 0]];
+
+    int index4 = m[1: 1 , 2: 2];
 
     int a = 2 + 3;
     int b = 2 * 3;
@@ -35,7 +56,22 @@ main {
     int e = 2 ^ 2;
     int f = 2 \- 4;
     int g = 4 % 2;
+
     string str1 = "ola " + "mundo";
     int str2 = lenght("ola");
     int str3 = substr("ola mundo", 1, 6);
+
+
+    do {
+        int soma = 2 + 4;
+        soma = soma(2, e);
+    } while ( 1 < 2 );
+
+    for( i in lista ){
+        a = 10;
+        foo();
+    }
+
+
 }
+
