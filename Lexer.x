@@ -56,6 +56,8 @@ tokens :-
   "AND"                                   { \s -> And }
   for                                    { \s -> For}
   do                                     { \s -> Do }
+  lenght                                 { \s -> Lenght }
+  substr                                 { \s -> Substr }
   $digit+                                { \s -> Int (read s)} 
   $digit+.$digit+                        { \s -> Float (read s)}
   "True"                                 { \s -> Bool (read s) }
@@ -105,6 +107,8 @@ data Token =
   Do |
   Type String |
   Id String |
+  Lenght |
+  Substr |
   Int Int |
   Float Float|
   Bool Bool |
