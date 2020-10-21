@@ -1,11 +1,14 @@
 func int soma( int a; int b; ){
     int x = a + b;
-    return "x";
+    return x;
 }
 
-func int subtracao( int a; int b; ){
+func string teste( int a; int b; ){
     int x = b - a;
-    return x;
+
+    if ( x < 1){
+        return "a";
+    }
 }
 
 func void foo (){
