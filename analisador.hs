@@ -141,6 +141,16 @@ floatToken = tokenPrim show update_pos get_token where
   get_token (Float p s) = Just (Float p s)
   get_token _       = Nothing
 
+lenghtToken :: Parsec [Token] st Token
+lenghtToken = tokenPrim show update_pos get_token where
+  get_token Lenght = Just Lenght
+  get_token _  = Nothing
+
+substrToken :: Parsec [Token] st Token
+substrToken = tokenPrim show update_pos get_token where
+  get_token Substr = Just Substr
+  get_token _  = Nothing
+
 primTypeToken = intToken <|> stringToken <|> floatToken <|> boolToken
 
 arrayToken :: Parsec [Token] st [Token]
@@ -364,6 +374,44 @@ expression_int = do
         c <- intToken <|> idToken
         return ([a]++b++[c])
 
+
+
+expression_string :: Parsec [Token] st [Token]
+expression_string = try(do
+                      a <- stringToken
+                      b <- sumToken
+                      c <- stringToken
+                      return ([a] ++ [b] ++ [c]))
+                    <|>
+                    try(do 
+                        a <- stringToken
+                        b <- multToken
+                        c <- intToken
+                        return ([a] ++ [b] ++ [c]))
+                    <|>
+                         try(do
+                         a <- intToken
+                         b <- multToken
+                         c <- stringToken
+                         return ([a] ++ [b] ++ [c]))
+                    <|>
+                        try(do
+                           a <- lenghtToken
+                           b <- beginParenthesisToken
+                           c <- stringToken
+                           d <- endParenthesisToken
+                           return ([a] ++ [b] ++ [c] ++ [d]))
+                    <|> (do 
+                            a <- substrToken
+                            b <- beginParenthesisToken
+                            c <- stringToken
+                            d <- colonToken
+                            e <- intToken
+                            f <- colonToken
+                            g <- intToken
+                            h <- endParenthesisToken
+                            return ([a] ++ [b] ++ [c] ++ [d] ++ [e] ++ [f] ++ [g] ++ [h]))
+                            
 -- array, matrix
 array_expression :: Parsec [Token] st [Token]
 array_expression = len_operation <|> try inner_prod_operation <|> try index_operation
@@ -407,6 +455,7 @@ remaining_slice = try (do a <- commaToken
                           b <- slice_expression 
                           return (a: b))
                   <|> return []
+
 
 
 assign :: Parsec [Token] st [Token]

@@ -58,6 +58,8 @@ tokens :-
   ".*"                                   { \p s -> InnerProd p} 
   "OR"                                   { \p s -> Or  p}
   "AND"                                  { \p s -> And  p}
+  lenght                                 { \p s -> Lenght p}
+  substr                                 { \p s -> Substr p}
   for                                    { \p s -> For p}
   do                                     { \p s -> Do  p}
   in                                     { \p s -> In  p}
@@ -108,6 +110,8 @@ data Token =
   InnerProd AlexPosn|
   Or AlexPosn|
   And AlexPosn|
+  Lenght AlexPosn|
+  Substr AlexPosn|
   In AlexPosn|
   For AlexPosn|
   While AlexPosn|

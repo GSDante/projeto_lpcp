@@ -57,6 +57,11 @@ main {
     int f = 2 \- 4;
     int g = 4 % 2;
 
+    string str1 = "ola " + "mundo";
+    int str2 = lenght("ola");
+    int str3 = substr("ola mundo", 1, 6);
+
+
     do {
         int soma = 2 + 4;
         soma = soma(2, e);
@@ -66,6 +71,7 @@ main {
         a = 10;
         foo();
     }
+
 
 }
 
