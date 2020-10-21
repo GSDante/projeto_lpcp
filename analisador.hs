@@ -255,7 +255,7 @@ expression_int = do
 
 -- array, matrix
 array_expression :: Parsec [Token] st [Token]
-array_expression = len_operation <|> try inner_prod_operation <|>  index_operation
+array_expression = len_operation <|> try inner_prod_operation <|> try index_operation
 
 len_operation :: Parsec [Token] st [Token]
 len_operation = do a <- lenToken
@@ -278,23 +278,23 @@ index_operation = try (do a <- idToken
                      <|>
                      do a <- idToken
                         b <- beginIndexToken
-                        c <- arrayToken
+                        c <- index_expression
                         d <- endIndexToken
                         return (a: b: c ++ [d])
 
 -- [1], [1:1], [1:1, 1:1], [1,1], 
-index_expression =  arrayToken <|> slice_expression
+index_expression =  try slice_expression <|> arrayToken
 
-slice_expression = do a <- intToken <|> idToken
+slice_expression :: Parsec [Token] st [Token]
+slice_expression = do a <- intToken 
                       b <- colonToken
-                      c <- intToken <|> idToken
+                      c <- intToken 
                       d <- remaining_slice
-
                       return (a:b:c:d)
 
-remaining_slice = try (do a<- commaToken
+remaining_slice = try (do a <- commaToken
                           b <- slice_expression 
-                          return (a:b))
+                          return (a: b))
                   <|> return []
 
 

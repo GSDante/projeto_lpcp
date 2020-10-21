@@ -28,7 +28,7 @@ main {
     float w = 2.3;
     print "1oi";
 
-    array ar = [1, 2];
+    array ar = [1, "2"];
     int len = #ar;
     int prod = ar .* ar;
 
@@ -36,8 +36,8 @@ main {
     int index = ar[1];
     int index2 = ar[x];
     int index3 = ar[[1, 0]];
-    
-    int index4 = m[ 1:0, ];
+
+    int index4 = m[1: 1 , 2: 2];
 
     int a = 2 + 3;
     int b = 2 * 3;
