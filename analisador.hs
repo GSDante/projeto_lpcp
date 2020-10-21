@@ -245,9 +245,8 @@ program = do
 subprograms :: Parsec [Token] st [Token]
 subprograms = try (do
           a <- subprogram
-          b <- semiColonToken
-          c <- subprograms
-          return (a ++ [b] ++ c))
+          b <- subprograms
+          return (a ++ b))
           <|> 
           return []
 
@@ -261,11 +260,9 @@ subprogram = do
             f <- endParenthesisToken
             g <- beginToken 
             h <- stmts
-            i <- returnToken
-            j <- idToken
-            k <- semiColonToken
-            l <- endToken
-            return (a:b:c:[d]++e++[f]++[g]++h++[i]++[j]++[k]++[l])
+            i <- endToken
+            j <- subprograms
+            return (a:b:c:[d]++e++[f]++[g]++h++[i])
 
 parameters :: Parsec [Token] st [Token]
 parameters = try (do
@@ -295,9 +292,12 @@ stmts = try( do
           return []
 
 stmt :: Parsec [Token] st [Token]
-stmt = try assign <|> try invoking_expression <|> print_exp <|> while <|> 
-       dowhile <|> for <|> ifs 
+stmt = try assign <|> try invoking_expression <|> try return_expression <|> 
+       print_exp <|> while <|> dowhile <|> for <|> ifs 
 
+return_expression = do a <- returnToken
+                       b <- expression
+                       return (a: b)
 
 invoking_expression = do a <- idToken
                          b <- beginParenthesisToken
@@ -434,7 +434,7 @@ expression = try( do
                   return (a) )
                   <|>  
                   do 
-                    a <- intToken <|> stringToken <|> boolToken <|> floatToken 
+                    a <- intToken <|> stringToken <|> boolToken <|> floatToken <|> idToken
                     return [a]
 
 

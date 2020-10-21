@@ -1,12 +1,16 @@
 func int soma( int a; int b; ){
     int x = a + b;
-    return x;
-};
+    return "x";
+}
 
 func int subtracao( int a; int b; ){
     int x = b - a;
     return x;
-};
+}
+
+func void foo (){
+    print "aa";
+}
 
 main {
     int x = 3;

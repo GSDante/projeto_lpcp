@@ -21,6 +21,7 @@ tokens :-
   ";"                                    { \s -> SemiColon}
   ":"                                    { \s -> Colon}
   ","                                    { \s -> Comma}
+  void                                   { \s -> Type s}
   int                                    { \s -> Type s}
   float                                  { \s -> Type s}
   bool                                   { \s -> Type s}
