@@ -272,7 +272,7 @@ subprogram = do
             h <- stmts
             i <- endToken
             j <- subprograms
-            return (a:b:c:[d]++e++[f]++[g]++h++[i])
+            return (a:b:c:[d]++e++[f]++[g]++h++[i] ++ j)
 
 parameters :: Parsec [Token] st [Token]
 parameters = try (do
