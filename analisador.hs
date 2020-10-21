@@ -143,12 +143,12 @@ floatToken = tokenPrim show update_pos get_token where
 
 lenghtToken :: Parsec [Token] st Token
 lenghtToken = tokenPrim show update_pos get_token where
-  get_token Lenght = Just Lenght
+  get_token (Lenght p) = Just (Lenght p)
   get_token _  = Nothing
 
 substrToken :: Parsec [Token] st Token
 substrToken = tokenPrim show update_pos get_token where
-  get_token Substr = Just Substr
+  get_token (Substr p) = Just (Substr p)
   get_token _  = Nothing
 
 primTypeToken = intToken <|> stringToken <|> floatToken <|> boolToken
@@ -401,16 +401,16 @@ expression_string = try(do
                            c <- stringToken
                            d <- endParenthesisToken
                            return ([a] ++ [b] ++ [c] ++ [d]))
-                    <|> (do 
+                    <|> do 
                             a <- substrToken
                             b <- beginParenthesisToken
                             c <- stringToken
-                            d <- colonToken
+                            d <- commaToken
                             e <- intToken
-                            f <- colonToken
+                            f <- commaToken
                             g <- intToken
                             h <- endParenthesisToken
-                            return ([a] ++ [b] ++ [c] ++ [d] ++ [e] ++ [f] ++ [g] ++ [h]))
+                            return ([a] ++ [b] ++ [c] ++ [d] ++ [e] ++ [f] ++ [g] ++ [h])
                             
 -- array, matrix
 array_expression :: Parsec [Token] st [Token]
@@ -481,7 +481,11 @@ expression = try( do
              try( do
                   a <- try arrayToken <|> matrixToken
                   return (a) )
-                  <|>  
+                  <|>
+             try( do
+                  a <- try expression_string
+                  return (a))
+                  <|>
                   do 
                     a <- intToken <|> stringToken <|> boolToken <|> floatToken 
                     return [a]
