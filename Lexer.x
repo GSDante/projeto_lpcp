@@ -55,7 +55,8 @@ tokens :-
   "^"                                    { \p s -> Pow p}
   "\-"                                   { \p s -> Rad p}
   "/"                                    { \p s -> Div p}
-  "#"                                    { \p s -> Len p} 
+  "#"                                    { \p s -> Len p}
+  "'"                                    { \p s -> Transpose p} 
   ".*"                                   { \p s -> InnerProd p} 
   "OR"                                   { \p s -> Or  p}
   "AND"                                  { \p s -> And  p}
@@ -69,7 +70,7 @@ tokens :-
   $digit+.$digit+                        { \p s -> Float p(read s)}
   "True"                                 { \p s -> Bool p(read s) }
   "False"                                { \p s -> Bool p(read s) }
-  $alpha+[$alpha $digit \_ \']*          { \p s -> Id p s }
+  $alpha+[$alpha $digit \_ ]*          { \p s -> Id p s }
   \" $alphanum [$alphanum ! \_ \ \p s']* \"  { \p s -> String p(read s)}
 {
 -- Each action has type :: String -> Token
@@ -108,6 +109,7 @@ data Token =
   Pow AlexPosn|
   Rad AlexPosn|
   Len AlexPosn|
+  Transpose AlexPosn|
   InnerProd AlexPosn|
   Or AlexPosn|
   And AlexPosn|

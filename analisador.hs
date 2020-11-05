@@ -231,6 +231,10 @@ lenToken = tokenPrim show update_pos get_token where
   get_token (Len p) = Just (Len p)
   get_token _   = Nothing
 
+transposeToken = tokenPrim show update_pos get_token where
+  get_token (Transpose p) = Just (Transpose p)
+  get_token _   = Nothing
+
 innerProdToken = tokenPrim show update_pos get_token where
   get_token (InnerProd p) = Just (InnerProd p)
   get_token _         = Nothing
@@ -414,12 +418,17 @@ expression_string = try(do
                             
 -- array, matrix
 array_expression :: Parsec [Token] st [Token]
-array_expression = len_operation <|> try inner_prod_operation <|> try index_operation
+array_expression = len_operation <|> try transpose_operation <|> try inner_prod_operation <|> try index_operation
 
 len_operation :: Parsec [Token] st [Token]
 len_operation = do a <- lenToken
                    b <- idToken
                    return (a:[b])
+
+transpose_operation :: Parsec [Token] st [Token]
+transpose_operation = do a <- idToken
+                         b <- transposeToken
+                         return (a:[b])
 
 inner_prod_operation :: Parsec [Token] st [Token]
 inner_prod_operation = do a <- idToken
@@ -456,6 +465,9 @@ remaining_slice = try (do a <- commaToken
                           return (a: b))
                   <|> return []
 
+--int_operation = do
+--        a <- sumToken <|> subToken <|> multToken <|> divToken <|> 
+--        return [a]
 
 
 assign :: Parsec [Token] st [Token]
