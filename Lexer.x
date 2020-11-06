@@ -53,6 +53,7 @@ tokens :-
   "*"                                    { \p s -> Multi p}
   "%"                                    { \p s -> Mod p}
   "^"                                    { \p s -> Pow p}
+  "abs"                                  { \p s -> Abs p}
   "\-"                                   { \p s -> Rad p}
   "/"                                    { \p s -> Div p}
   "#"                                    { \p s -> Len p} 
@@ -104,6 +105,7 @@ data Token =
   Sub AlexPosn|
   Div AlexPosn|
   Mod AlexPosn|
+  Abs AlexPosn|
   Multi AlexPosn|
   Pow AlexPosn|
   Rad AlexPosn|

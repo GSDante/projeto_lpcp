@@ -1,11 +1,14 @@
 func int soma( int a; int b; ){
+    int val1 = abs(-3);
+    float val2 = abs(-1.2);
+    int val3 = abs(a);
     int x = a + b;
     return x;
 }
 
 func string teste( int a; int b; ){
     int x = b - a;
-
+    float y = 1.4 - 0.1;
     if ( x < 1){
         return "a";
     }
