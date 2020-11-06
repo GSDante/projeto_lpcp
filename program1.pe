@@ -1,25 +1,25 @@
-func int soma( int a; int b; ){
+func int soma( int a; int b; )Begin
     int val1 = abs(-3);
     float val2 = abs(-1.2);
     int val3 = abs(a);
     int x = a + b;
     return x;
-}
+End
 
-func string teste( int a; int b; ){
+func string teste( int a; int b; )Begin
     int x = b - a;
     float y = 1.4 - 0.1;
-    if ( x < 1){
+    if ( x < 1)BeginIf
         return "a";
-    }
-}
+    EndIf
+End
 
-func void foo (){
+func void foo () Begin
     print "aa";
-}
+End
 
     
-main {
+main Begin
 
 
     int x = 3;
@@ -28,22 +28,22 @@ main {
 
     const int a = 3.2+x;
     
-    while(3 > 4 OR 5 < z){
+    while(3 > 4 OR 5 < z)BeginWhile
         w = 5;
-        while(6 >= 2){
-            if(12 <= 8){
+        while(6 >= 2)BeginWhile
+            if(12 <= 8)BeginIf
 	            z = 10;
-	        }
-	    }
-    };
+	        EndIf
+	    EndWhile
+    EndWhile;
     
-    if(3 > 4 OR 2 < 5){
-        if(8 < 9 AND 4 == y){
+    if(3 > 4 OR 2 < 5)BeginIf
+        if(8 < 9 AND 4 == y)BeginIf
             w = 5;
-        }else{
+        EndIf else BeginIf
             y = 6;
-	    }
-    };
+	    EndIf
+    EndIf;
 
     print x;
     string zeta = "ola mundo";
@@ -75,16 +75,15 @@ main {
     string str3 = substr("ola mundo", 1, 2);
 
 
-    do {
+    do BeginWhile
         int soma = 2 + 4;
         soma = soma(2, e);
-    } while ( 1 < 2 );
+    EndWhile while ( 1 < 2 );
 
-    for( i in lista ){
+    for( i in lista )BeginFor
         a = 10;
         foo();
-    }
+    EndFor
 
 
-}
-
+End

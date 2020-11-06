@@ -16,8 +16,14 @@ tokens :-
   $white+                                ;
   "--".*                                 ;
   main                                { \p s -> Program p }
-  "{"                                    { \p s -> Begin p}
-  "}"                                    { \p s -> End p}
+  Begin                                    { \p s -> Begin p}
+  End                                    { \p s -> End p}
+  BeginIf                                    { \p s -> BeginIf p}
+  EndIf                                    { \p s -> EndIf p}
+  BeginFor                                    { \p s -> BeginFor p}
+  EndFor                                    { \p s -> EndFor p}
+  BeginWhile                                    { \p s -> BeginWhile p}
+  EndWhile                                    { \p s -> EndWhile p}  
   ";"                                    { \p s -> SemiColon p}
   ":"                                    { \p s -> Colon p}
   ","                                    { \p s -> Comma p}
@@ -81,6 +87,12 @@ data Token =
   Program  AlexPosn|
   Begin    AlexPosn|
   End      AlexPosn|
+  BeginWhile    AlexPosn|
+  EndWhile      AlexPosn|
+  BeginFor    AlexPosn|
+  EndFor      AlexPosn|
+  BeginIf    AlexPosn|
+  EndIf      AlexPosn|
   BeginParenthesis  AlexPosn|
   EndParenthesis AlexPosn|
   BeginIndex AlexPosn|
