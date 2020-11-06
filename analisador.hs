@@ -17,6 +17,11 @@ idToken = tokenPrim show update_pos get_token where
   get_token (Id p s) = Just (Id p s)
   get_token _      = Nothing
 
+constToken = tokenPrim show update_pos get_token where
+  get_token (Const p) = Just (Const p)
+  get_token _      = Nothing
+
+
 whileToken = tokenPrim show update_pos get_token where
   get_token (While p)    = Just (While p)
   get_token _      = Nothing
@@ -515,6 +520,14 @@ assign = try (do
           b <- assignToken
           c <- expression
           return (t:a:b:c))
+          <|>
+          try (do
+          m <- constToken
+          t <- typeToken
+          a <- idToken
+          b <- assignToken
+          c <- expression
+          return (m:t:a:b:c))
           <|>
           do
           a <- idToken

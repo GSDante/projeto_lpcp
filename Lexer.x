@@ -28,6 +28,7 @@ tokens :-
   string                                 { \p s -> Type p s}
   array                                  { \p s -> Type p s}
   matrix                                 { \p s -> Type p s}
+  const                                  { \p s -> Const p}
   =                                      { \p s -> Assign p}
   "("				                             { \p s-> BeginParenthesis p}
   ")"				                             { \p s-> EndParenthesis p}
@@ -121,6 +122,7 @@ data Token =
   Func AlexPosn|
   Do  AlexPosn|
   Return  AlexPosn|
+  Const AlexPosn|
   Type AlexPosn String |
   Id AlexPosn String |
   Int AlexPosn Int |

@@ -20,9 +20,14 @@ func void foo (){
 
     
 main {
+
+
     int x = 3;
     int y = 4;
     int z = 5;
+
+    const int a = 3.2+x;
+    
     while(3 > 4 OR 5 < z){
         w = 5;
         while(6 >= 2){
