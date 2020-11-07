@@ -57,7 +57,8 @@ tokens :-
   "/"                                    { \p s -> Div p}
   "#"                                    { \p s -> Len p}
   "'"                                    { \p s -> Transpose p} 
-  ".*"                                   { \p s -> InnerProd p} 
+  ".*"                                   { \p s -> InnerProd p}
+  "<-"                                   { \p s -> SwapLines p} 
   "OR"                                   { \p s -> Or  p}
   "AND"                                  { \p s -> And  p}
   lenght                                 { \p s -> Lenght p}
@@ -111,6 +112,7 @@ data Token =
   Len AlexPosn|
   Transpose AlexPosn|
   InnerProd AlexPosn|
+  SwapLines AlexPosn|
   Or AlexPosn|
   And AlexPosn|
   Lenght AlexPosn|
