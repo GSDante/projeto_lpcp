@@ -16,8 +16,14 @@ tokens :-
   $white+                                ;
   "--".*                                 ;
   main                                { \p s -> Program p }
-  "{"                                    { \p s -> Begin p}
-  "}"                                    { \p s -> End p}
+  Begin                                    { \p s -> Begin p}
+  End                                    { \p s -> End p}
+  BeginIf                                    { \p s -> BeginIf p}
+  EndIf                                    { \p s -> EndIf p}
+  BeginFor                                    { \p s -> BeginFor p}
+  EndFor                                    { \p s -> EndFor p}
+  BeginWhile                                    { \p s -> BeginWhile p}
+  EndWhile                                    { \p s -> EndWhile p}  
   ";"                                    { \p s -> SemiColon p}
   ":"                                    { \p s -> Colon p}
   ","                                    { \p s -> Comma p}
@@ -28,6 +34,7 @@ tokens :-
   string                                 { \p s -> Type p s}
   array                                  { \p s -> Type p s}
   matrix                                 { \p s -> Type p s}
+  const                                  { \p s -> Const p}
   =                                      { \p s -> Assign p}
   "("				                             { \p s-> BeginParenthesis p}
   ")"				                             { \p s-> EndParenthesis p}
@@ -53,6 +60,7 @@ tokens :-
   "*"                                    { \p s -> Multi p}
   "%"                                    { \p s -> Mod p}
   "^"                                    { \p s -> Pow p}
+  "abs"                                  { \p s -> Abs p}
   "\-"                                   { \p s -> Rad p}
   "/"                                    { \p s -> Div p}
   "#"                                    { \p s -> Len p}
@@ -81,6 +89,12 @@ data Token =
   Program  AlexPosn|
   Begin    AlexPosn|
   End      AlexPosn|
+  BeginWhile    AlexPosn|
+  EndWhile      AlexPosn|
+  BeginFor    AlexPosn|
+  EndFor      AlexPosn|
+  BeginIf    AlexPosn|
+  EndIf      AlexPosn|
   BeginParenthesis  AlexPosn|
   EndParenthesis AlexPosn|
   BeginIndex AlexPosn|
@@ -106,6 +120,7 @@ data Token =
   Sub AlexPosn|
   Div AlexPosn|
   Mod AlexPosn|
+  Abs AlexPosn|
   Multi AlexPosn|
   Pow AlexPosn|
   Rad AlexPosn|
@@ -123,6 +138,7 @@ data Token =
   Func AlexPosn|
   Do  AlexPosn|
   Return  AlexPosn|
+  Const AlexPosn|
   Type AlexPosn String |
   Id AlexPosn String |
   Int AlexPosn Int |
