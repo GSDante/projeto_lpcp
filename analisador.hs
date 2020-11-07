@@ -213,9 +213,12 @@ matrixToken  =
       return (lbrack : innercontent ++ [rbrack])
 
 innerContentMatrix = 
-    do first <- arrayToken
-       next <- remainingContentMatrix
-       return (first ++ next)
+    try (do first <- arrayToken
+            next <- remainingContentMatrix
+            return (first ++ next))
+    <|> do first <- matrixToken
+           next <- remainingContentMatrix
+           return (first ++ next)
 
 remainingContentMatrix =
     try ( do a <- commaToken 
@@ -265,9 +268,18 @@ lenToken = tokenPrim show update_pos get_token where
   get_token (Len p) = Just (Len p)
   get_token _   = Nothing
 
+transposeToken = tokenPrim show update_pos get_token where
+  get_token (Transpose p) = Just (Transpose p)
+  get_token _   = Nothing
+
 innerProdToken = tokenPrim show update_pos get_token where
   get_token (InnerProd p) = Just (InnerProd p)
   get_token _         = Nothing
+
+swapLinesToken :: Parsec [Token] st Token
+swapLinesToken = tokenPrim show update_pos get_token where
+  get_token (SwapLines p) = Just (SwapLines p)
+  get_token _             = Nothing
 
 typeToken = tokenPrim show update_pos get_token where
   get_token (Type p s) = Just (Type p s)
@@ -494,19 +506,42 @@ expression_string = try(do
                             
 -- array, matrix
 array_expression :: Parsec [Token] st [Token]
-array_expression = len_operation <|> try inner_prod_operation <|> try index_operation
+array_expression = len_operation <|> try transpose_operation <|> try inner_prod_operation <|> 
+                   try swap_lines_operation <|> try index_operation <|> 
+                   do a <- try arrayToken <|> matrixToken
+                      b <- array_operators 
+                      c <- try arrayToken <|> matrixToken
+                      return (a ++ b ++ c) 
 
 len_operation :: Parsec [Token] st [Token]
 len_operation = do a <- lenToken
                    b <- idToken
                    return (a:[b])
 
+transpose_operation :: Parsec [Token] st [Token]
+transpose_operation = do a <- idToken
+                         b <- transposeToken
+                         return (a:[b])
+
+listify_id :: Parsec [Token] st [Token]
+listify_id = do a <- idToken
+                return ([a])
+
 inner_prod_operation :: Parsec [Token] st [Token]
-inner_prod_operation = do a <- idToken
+inner_prod_operation = do a <- listify_id <|> try arrayToken <|> matrixToken
                           b <- innerProdToken
-                          c <- idToken
-                          return (a : b:[c])
+                          c <- listify_id <|> try arrayToken <|> matrixToken
+                          return (a ++ b: c) 
                           
+swap_lines_operation :: Parsec [Token] st [Token]
+swap_lines_operation = do a <- matrixToken
+                          b <- swapLinesToken
+                          c <- beginParenthesisToken
+                          d <- intToken
+                          e <- commaToken
+                          f <- intToken
+                          g <- endParenthesisToken
+                          return (a ++ b : c:d:e:f: [g]) 
 
 index_operation :: Parsec [Token] st [Token]
 index_operation = try (do a <- idToken
@@ -536,7 +571,11 @@ remaining_slice = try (do a <- commaToken
                           return (a: b))
                   <|> return []
 
+array_operators = do a <- sumToken <|> subToken <|> multToken <|> divToken 
+                          <|> equalToken <|> diffToken
+                     return [a]
 
+-- COMANDOS
 
 assign :: Parsec [Token] st [Token]
 assign = try (do
