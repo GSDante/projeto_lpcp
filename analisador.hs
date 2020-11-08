@@ -465,18 +465,21 @@ expression_float = try (do
 
 
 
-
+string_operation :: Parsec [Token] st [Token]
+string_operation = do
+           a <- equalToken <|> diffToken
+           return [a]
 
 
 expression_string :: Parsec [Token] [(Token,Token)] [Token]
 expression_string = try(do
-                      a <- stringToken
+                      a <- stringToken <|> idToken
                       b <- sumToken
-                      c <- stringToken
+                      c <- stringToken <|> idToken
                       return ([a] ++ [b] ++ [c]))
                     <|>
                     try(do 
-                        a <- stringToken
+                        a <- stringToken <|> idToken
                         b <- multToken
                         c <- intToken
                         return ([a] ++ [b] ++ [c]))
@@ -484,19 +487,25 @@ expression_string = try(do
                          try(do
                          a <- intToken
                          b <- multToken
-                         c <- stringToken
+                         c <- stringToken <|> idToken
                          return ([a] ++ [b] ++ [c]))
                     <|>
                         try(do
                            a <- lenghtToken
                            b <- beginParenthesisToken
-                           c <- stringToken
+                           c <- stringToken <|> idToken
                            d <- endParenthesisToken
                            return ([a] ++ [b] ++ [c] ++ [d]))
+                    <|>
+                        try(do
+                            a <- stringToken <|> idToken
+                            b <- string_operation
+                            c <- stringToken <|> idToken
+                            return ([a]++b++[c]))
                     <|> do 
                             a <- substrToken
                             b <- beginParenthesisToken
-                            c <- stringToken
+                            c <- stringToken <|> idToken
                             d <- commaToken
                             e <- intToken
                             f <- commaToken

@@ -76,10 +76,6 @@ main Begin
     int f = 2 \- 4;
     int g = 4 % 2;
 
-    string str1 = "ola " + "mundo";
-    int str2 = lenght("ola");
-    string str3 = substr("ola mundo", 1, 2);
-
 
     do BeginWhile
         int soma = 2 + 4;
@@ -89,7 +85,13 @@ main Begin
     for( i in lista )BeginFor
         a = 10;
         foo();
-    EndFor
+    EndFor;
+
+    string str1 = "a" + "mundo";
+    int str2 = lenght(b);
+    string str3 = substr(str3, 1, 2);
+    bool assert1 = str3 != "ola";
+    bool assert2 = "sim" == "sim";
 
 
 End
