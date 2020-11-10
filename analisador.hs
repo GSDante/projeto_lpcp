@@ -406,11 +406,37 @@ expressao_boolean = do
                 c <- intToken <|> idToken
                 return ([a]++b++[c])
 
+
+
 -- int
 int_operation :: Parsec [Token] st [Token]
 int_operation = do
         a <- sumToken <|> subToken <|> multToken <|> divToken <|> expToken <|> radToken <|> restoDivToken
         return [a]
+
+
+add_expression :: Parsec[Token] st [Token]
+add_expression = try (do
+                    a <- int_operation
+                    b <- intToken
+                    c <- add_expression
+                    return (a ++ [b])
+                  )
+                  <|> 
+                    return []
+                  
+
+expressions_int :: Parsec[Token] st [Token]
+expressions_int = try(do
+                  a <- expression_int
+                  b <- add_expression
+                  return (a++b))
+                <|>
+                  try(do
+                    a <- expression_int
+                    return a)
+
+
 
 expression_int :: Parsec [Token] st [Token]
 expression_int = try (do
@@ -426,14 +452,15 @@ expression_int = try (do
                     d <- endParenthesisToken
                     return ([a]++[b]++[c]++[d]) )
                   <|>
-                  (do
+                  try (do
                     a <- absToken
                     b <- beginParenthesisToken
                     c <- subToken
                     d <- intToken <|> idToken
                     e <- endParenthesisToken
                     return ([a]++[b]++[c]++[d]++[e]) )
-
+                  <|>
+                  return []
 
 float_operation :: Parsec [Token] st [Token]
 float_operation = do
@@ -611,7 +638,7 @@ assign = try (do
 
 expression :: Parsec [Token] st [Token]
 expression = try( do
-                  a <- try array_expression <|> try expression_int <|> try expression_float <|> invoking_expression
+                  a <- try array_expression <|> try expressions_int <|> try expression_float <|> invoking_expression
                   return (a) )
                   <|>
              try( do
@@ -706,7 +733,7 @@ parser :: [Token] -> Either ParseError [Token]
 parser tokens = runParser program () "Error message" tokens
 
 main :: IO ()
-main = case parser (getTokens "program1.pe") of
+main = case parser (getTokens "program3.pe") of
             { Left err -> print err; 
               Right ans -> print ans
             }
