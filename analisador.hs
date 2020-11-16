@@ -2,6 +2,10 @@ module Main (main) where
 
 import Lexer
 import Text.Parsec
+import Control.Monad.IO.Class
+
+import System.IO.Unsafe
+
 
 -- parsers para os tokens
 
@@ -601,6 +605,7 @@ assign = try (do
           a <- idToken
           b <- assignToken
           c <- expression
+          updateState(symtable_insert (a, get_default_value t))
           return (m:t:a:b:c))
           <|>
           do
@@ -705,6 +710,10 @@ remaining_stmts = (do a <- semiColonToken
 
 get_default_value :: Token -> Token
 get_default_value (Type pos "int" ) = Int pos 0   
+get_default_value (Type pos "float" ) = Float pos 0.0   
+get_default_value (Type pos "bool" ) = Bool pos True 
+get_default_value (Type pos "String" ) = String pos "" 
+ 
 
 symtable_insert :: (Token,Token) -> [(Token,Token)] -> [(Token,Token)]
 symtable_insert symbol []  = [symbol]
@@ -724,9 +733,8 @@ symtable_remove (id1, v1) ((id2, v2):t) =
 
 
 -- invocação do parser para o símbolo de partida 
-
 parser :: [Token] -> Either ParseError [Token]
-parser tokens = runParser program () "Error message" tokens
+parser tokens = runParser program [] "Error message" tokens
 
 main :: IO ()
 main = case parser (getTokens "program1.pe") of
