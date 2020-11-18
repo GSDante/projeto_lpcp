@@ -6,6 +6,7 @@ import Control.Monad.IO.Class
 
 import System.IO.Unsafe
 
+import Data.List
 
 -- parsers para os tokens
 
@@ -716,7 +717,9 @@ get_default_value :: Token -> Token
 get_default_value (Type pos "int" ) = Int pos 0   
 get_default_value (Type pos "float" ) = Float pos 0.0   
 get_default_value (Type pos "bool" ) = Bool pos True 
-get_default_value (Type pos "String" ) = String pos "" 
+get_default_value (Type pos "string" ) = String pos "" 
+get_default_value (Type pos "array" ) = Array pos []
+get_default_value (Type pos "matrix" ) = Matrix pos [[]]
  
 
 symtable_insert :: (Token,Token) -> [(Token,Token)] -> [(Token,Token)]
