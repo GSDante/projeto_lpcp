@@ -9,8 +9,12 @@ programToken = tokenPrim show update_pos get_token where
   get_token (Program p)  = Just (Program p) 
   get_token _       = Nothing
 
-subprogramToken = tokenPrim show update_pos get_token where
+funcToken = tokenPrim show update_pos get_token where
   get_token (Func p) = Just (Func p)
+  get_token _       = Nothing
+
+procToken = tokenPrim show update_pos get_token where
+  get_token (Proc p) = Just (Proc p)
   get_token _       = Nothing
 
 idToken = tokenPrim show update_pos get_token where
@@ -307,8 +311,8 @@ subprograms = try (do
           return []
 
 subprogram :: Parsec [Token] st [Token]
-subprogram = do 
-            a <- subprogramToken 
+subprogram = (do 
+            a <- funcToken 
             b <- typeToken
             c <- idToken
             d <- beginParenthesisToken
@@ -318,7 +322,20 @@ subprogram = do
             h <- stmts
             i <- endToken
             j <- subprograms
-            return (a:b:c:[d]++e++[f]++[g]++h++[i] ++ j)
+            return (a:b:c:[d]++e++[f]++[g]++h++[i] ++ j))
+            <|>
+            (do
+            a <- procToken 
+            c <- idToken
+            d <- beginParenthesisToken
+            e <- parameters
+            f <- endParenthesisToken
+            g <- beginToken 
+            h <- stmts
+            i <- endToken
+            j <- subprograms
+            return (a:c:[d]++e++[f]++[g]++h++[i] ++ j))
+
 
 parameters :: Parsec [Token] st [Token]
 parameters = try (do
@@ -469,6 +486,10 @@ expression_int = try (do
                     e <- endParenthesisToken
                     return ([a]++[b]++[c]++[d]++[e]) )
                   <|>
+                   do
+                    a <- intToken
+                    return [a]
+                  <|>
                   return []
 
 float_operation :: Parsec [Token] st [Token]
@@ -491,13 +512,19 @@ expression_float = try (do
                     d <- endParenthesisToken
                     return ([a]++[b]++[c]++[d]) )
                   <|>
-                  (do
+                  try(do
                     a <- absToken
                     b <- beginParenthesisToken
                     c <- subToken
                     d <- floatToken <|> idToken
                     e <- endParenthesisToken
                     return ([a]++[b]++[c]++[d]++[e]) )
+                  <|>
+                  do
+                    a <- floatToken
+                    return [a]
+                  <|>
+                    return []
 
 
 
@@ -646,7 +673,8 @@ assign = try (do
 
 
 expression:: Parsec [Token] st [Token]
-expression = try( do
+expression = 
+            try( do
                   a <- try array_expression <|> try expressions_int <|> try expression_float <|> invoking_expression
                   return (a) )
                   <|>
@@ -658,10 +686,11 @@ expression = try( do
                   a <- try expression_string
                   return (a))
                   <|>
-             
-              do 
+             do 
                 a <- intToken <|> stringToken <|> boolToken <|> floatToken <|> idToken
                 return [a]
+                <|>
+                return []
 
 
 print_exp :: Parsec [Token] st [Token]
@@ -743,7 +772,7 @@ parser :: [Token] -> Either ParseError [Token]
 parser tokens = runParser program () "Error message" tokens
 
 main :: IO ()
-main = case parser (getTokens "program3.pe") of
+main = case parser (getTokens "program1.pe") of
             { Left err -> print err; 
               Right ans -> print ans
             }

@@ -1,6 +1,23 @@
+proc foo2(int a; string b;) Begin
+	print "aab";
+End
+
+func void foo (string b; int a;) Begin
+    print "aa";
+    return a;
+End
+
+proc foo2(int a; string b;) Begin
+	print "aab";
+End
+
+
+func void foo () Begin
+    print "aa";
+End
 
 main Begin
-    
+ 
     int x = (6 + 5) + 6 * 2 / 2 +10 +2;
 
 End
