@@ -1,5 +1,5 @@
 func int soma( int a; int b; )Begin
-    
+    int valor;
     int val3 = abs(a);
     int x = a + b;
     int x = 3.4 + 2.7;

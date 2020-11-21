@@ -331,7 +331,7 @@ subprogram = (do
             e <- parameters
             f <- endParenthesisToken
             g <- beginToken 
-            h <- stmts
+            h <- stmts_proc
             i <- endToken
             j <- subprograms
             return (a:c:[d]++e++[f]++[g]++h++[i] ++ j))
@@ -364,13 +364,35 @@ stmts = try( do
           <|>
           return []
 
+stmts_proc :: Parsec [Token] st [Token]
+stmts_proc = try( do
+                   first <- stmt_proc
+                   next <- remaining_stmts_proc
+                   return (first ++ next))
+                <|>
+                return []
+
 stmt :: Parsec [Token] st [Token]
-stmt = try assign <|> try invoking_expression <|> try return_expression <|> 
-       print_exp <|> while <|> dowhile <|> for <|> ifs 
+stmt = try assign <|> try declaration <|> try invoking_expression <|> try return_expression <|> 
+       print_exp <|> while <|> dowhile <|> for <|> ifs
+
+stmt_proc :: Parsec [Token] st [Token]
+stmt_proc = try assign <|> try declaration <|>  try invoking_expression <|> 
+            print_exp <|> while_proc <|> dowhile_proc <|> for_proc <|> ifs_proc
+
+
+declaration :: Parsec [Token] st [Token]
+declaration = try(do a <- typeToken
+                     b <- idToken
+                     return (a:[b]))
+                 
+--return_expression = try(do a <- returnToken
+--                           b <- try expression
+--                           return (a: b))
 
 return_expression = do a <- returnToken
-                       b <- expression
-                       return (a: b)
+                       b <- intToken <|> stringToken <|> boolToken <|> floatToken <|> idToken
+                       return (a:[b])
 
 invoking_expression = do a <- idToken
                          b <- beginParenthesisToken
@@ -486,9 +508,9 @@ expression_int = try (do
                     e <- endParenthesisToken
                     return ([a]++[b]++[c]++[d]++[e]) )
                   <|>
-                   do
+                   try(do
                     a <- intToken
-                    return [a]
+                    return [a])
                   <|>
                   return []
 
@@ -520,9 +542,9 @@ expression_float = try (do
                     e <- endParenthesisToken
                     return ([a]++[b]++[c]++[d]++[e]) )
                   <|>
-                  do
+                  try(do
                     a <- floatToken
-                    return [a]
+                    return [a])
                   <|>
                     return []
 
@@ -565,7 +587,7 @@ expression_string = try(do
                             b <- string_operation
                             c <- stringToken <|> idToken
                             return ([a]++b++[c]))
-                    <|> do 
+                    <|> try(do 
                             a <- substrToken
                             b <- beginParenthesisToken
                             c <- stringToken <|> idToken
@@ -574,7 +596,13 @@ expression_string = try(do
                             f <- commaToken
                             g <- intToken
                             h <- endParenthesisToken
-                            return ([a] ++ [b] ++ [c] ++ [d] ++ [e] ++ [f] ++ [g] ++ [h])
+                            return ([a] ++ [b] ++ [c] ++ [d] ++ [e] ++ [f] ++ [g] ++ [h]))
+                    <|> 
+                        try(do
+                            a <- stringToken
+                            return [a])
+                     <|> 
+                        return []
                             
 -- array, matrix
 array_expression :: Parsec [Token] st [Token]
@@ -686,9 +714,9 @@ expression =
                   a <- try expression_string
                   return (a))
                   <|>
-             do 
-                a <- intToken <|> stringToken <|> boolToken <|> floatToken <|> idToken
-                return [a]
+             try( do 
+                  a <- intToken <|> stringToken <|> boolToken <|> floatToken <|> idToken
+                  return [a])
                 <|>
                 return []
 
@@ -710,11 +738,34 @@ while = do
        g <- endWhileToken
        return (a:[b] ++ c ++ d:[e]++ f ++ [g]) <|> (return [])
 
+while_proc :: Parsec [Token] st [Token]
+while_proc = do
+       a <- whileToken
+       b <- beginParenthesisToken
+       c <- expressao_logica
+       d <- endParenthesisToken
+       e <- beginWhileToken
+       f <- stmts_proc
+       g <- endWhileToken
+       return (a:[b] ++ c ++ d:[e]++ f ++ [g]) <|> (return [])
+
 dowhile :: Parsec [Token] st [Token]
 dowhile = do
        a <- doToken
        b <- beginWhileToken
        c <- stmts
+       d <- endWhileToken
+       e <- whileToken
+       f <- beginParenthesisToken
+       g <- expressao_logica
+       h <- endParenthesisToken
+       return ([a]++[b]++c++[d]++[e]++[f]++g++[h]) <|> (return [])
+
+dowhile_proc :: Parsec [Token] st [Token]
+dowhile_proc = do
+       a <- doToken
+       b <- beginWhileToken
+       c <- stmts_proc
        d <- endWhileToken
        e <- whileToken
        f <- beginParenthesisToken
@@ -732,6 +783,19 @@ for = do
        f <- endParenthesisToken
        g <- beginForToken
        h <- stmts
+       i <- endForToken
+       return (a:b:c:d:e:f:[g]++h++[i]) <|> (return [])
+
+for_proc :: Parsec [Token] st [Token]
+for_proc = do
+       a <- forToken
+       b <- beginParenthesisToken
+       c <- idToken
+       d <- inToken
+       e <- idToken
+       f <- endParenthesisToken
+       g <- beginForToken
+       h <- stmts_proc
        i <- endForToken
        return (a:b:c:d:e:f:[g]++h++[i]) <|> (return [])
 
@@ -761,10 +825,41 @@ ifs =
            g <- endIfToken
            return (a:[b] ++ c ++ d:[e]++ f ++ [g])) <|> (return [])
 
+ifs_proc :: Parsec [Token] st [Token]
+ifs_proc = 
+       try (do
+         a <- ifToken
+         b <- beginParenthesisToken
+         c <- expressao_logica  
+         d <- endParenthesisToken
+         e <- beginIfToken
+         f <- stmts_proc
+         g <- endIfToken
+         h <- elseToken
+         i <- beginIfToken
+         j <- stmts
+         k <- endIfToken
+         return (a:[b] ++ c ++ d:[e] ++ f ++ g:h:[i] ++ j ++ [k]))
+         <|>
+         (do
+           a <- ifToken
+           b <- beginParenthesisToken
+           c <- expressao_logica 
+           d <- endParenthesisToken
+           e <- beginIfToken
+           f <- stmts_proc
+           g <- endIfToken
+           return (a:[b] ++ c ++ d:[e]++ f ++ [g])) <|> (return [])
+
 remaining_stmts :: Parsec [Token] st [Token]
 remaining_stmts = (do a <- semiColonToken
                       b <- stmts
                       return (a:b)) <|> (return [])
+
+remaining_stmts_proc :: Parsec [Token] st [Token]
+remaining_stmts_proc = (do a <- semiColonToken
+                           b <- stmts_proc
+                           return (a:b)) <|> (return [])
 
 -- invocação do parser para o símbolo de partida 
 
@@ -772,7 +867,7 @@ parser :: [Token] -> Either ParseError [Token]
 parser tokens = runParser program () "Error message" tokens
 
 main :: IO ()
-main = case parser (getTokens "program1.pe") of
+main = case parser (getTokens "program3.pe") of
             { Left err -> print err; 
               Right ans -> print ans
             }
