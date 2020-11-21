@@ -1,14 +1,16 @@
+int x ;
+float u = 12;
 proc foo2(int a; string b;) Begin
 	int a;
 	string b;
 	int t;
-	
+
 	float c;
 End
 
-func void foo (string b; int a;) Begin
+func void foo (string #b; int #a; float t;) Begin
     print "aa";
-    return 5.6;
+    return 5.6 + 1.0 ;
 End
 
 proc foo2(int a; string b;) Begin
@@ -23,5 +25,7 @@ End
 main Begin
 
     int x = (6 + 5) + 6 * 2 / 2 + 10 +2;
+    float y = 3.4 + 9.1 *(8.2 + 4/2);
+    int z;
 
 End

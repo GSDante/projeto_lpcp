@@ -297,10 +297,25 @@ update_pos pos _ []      = pos
 
 program :: Parsec [Token] st [Token]
 program = do
-            a <- subprograms 
-            b <- mainProgram
+            a <- global_variable
+            b <- subprograms 
+            c <- mainProgram
             eof
-            return (a ++ b) 
+            return (a ++ b ++ c) 
+
+global_variable :: Parsec[Token] st [Token]
+global_variable = do
+                a <- try assign <|> try declaration
+                b <- semiColonToken
+                c <- remaining_global_variable
+                return (a ++ [b] ++ c)
+                
+remaining_global_variable :: Parsec[Token] st [Token]
+remaining_global_variable = try (do
+                a <- global_variable
+                return(a))
+                <|>
+                return []
 
 subprograms :: Parsec [Token] st [Token]
 subprograms = try (do
@@ -344,6 +359,13 @@ parameters = try (do
             c <- semiColonToken
             d <- parameters 
             return (a:b:[c]++d) )
+            <|>try(do
+            a <- typeToken
+            b <- lenToken
+            c <- idToken
+            d <- semiColonToken
+            e <- parameters 
+            return (a:b:c:[d]++e))
             <|>
             return []
 
@@ -391,8 +413,8 @@ declaration = try(do a <- typeToken
 --                           return (a: b))
 
 return_expression = do a <- returnToken
-                       b <- intToken <|> stringToken <|> boolToken <|> floatToken <|> idToken
-                       return (a:[b])
+                       b <- try expression
+                       return (a:b)
 
 invoking_expression = do a <- idToken
                          b <- beginParenthesisToken
@@ -458,8 +480,18 @@ add_expression :: Parsec[Token] st [Token]
 add_expression = try (do
                     a <- int_operation
                     b <- intToken
-                    c <- add_expression
+                    c <- try add_expression
                     return (a ++ [b])
+                  )
+                  <|> 
+                    return []
+
+add_expression_float :: Parsec[Token] st [Token]
+add_expression_float = try (do
+                    a <- float_operation
+                    b <- float_values
+                    c <- try add_expression_float
+                    return (a ++ b)
                   )
                   <|> 
                     return []
@@ -467,23 +499,44 @@ add_expression = try (do
 
 expressions_int :: Parsec[Token] st [Token]
 expressions_int = try(do
-                  a <- expression_int
-                  b <- add_expression
+                  a <- try expression_int
+                  b <- try add_expression
+                  return (a++b))
+                <|>
+                  do
+                    a <- expression_int
+                    return (a)
+
+expressions_float :: Parsec[Token] st [Token]
+expressions_float = try(do
+                  a <- try expression_float
+                  b <- try add_expression_float
                   return (a++b))
                 <|>
                   (do
-                    a <- expression_int
+                    a <- expression_float
                     return (a))
 
 int_values :: Parsec[Token] st [Token]
 int_values = try(do
               a <- beginParenthesisToken
-              b <- expression_int
+              b <- try expression_int
+              c <- endParenthesisToken
+              return ([a]++b++[c]))
+              <|>
+              do
+              a <- intToken <|> idToken 
+              return [a]
+
+float_values :: Parsec[Token] st [Token]
+float_values = try(do
+              a <- beginParenthesisToken
+              b <- try expression_float
               c <- endParenthesisToken
               return ([a]++b++[c]))
               <|>
               (do
-              a <- intToken <|> idToken
+              a <- floatToken <|> idToken
               return [a])
 
 expression_int :: Parsec [Token] st [Token]
@@ -496,23 +549,24 @@ expression_int = try (do
                   try (do
                     a <- absToken
                     b <- beginParenthesisToken
-                    c <- intToken <|> idToken
+                    c <- int_values 
                     d <- endParenthesisToken
-                    return ([a]++[b]++[c]++[d]) )
+                    return ([a]++[b]++c++[d]) )
                   <|>
                   try (do
                     a <- absToken
                     b <- beginParenthesisToken
                     c <- subToken
-                    d <- intToken <|> idToken
+                    d <- int_values
                     e <- endParenthesisToken
-                    return ([a]++[b]++[c]++[d]++[e]) )
+                    return ([a]++[b]++[c]++d++[e]) )
                   <|>
-                   try(do
+                   do
                     a <- intToken
-                    return [a])
-                  <|>
-                  return []
+                    return [a]
+                  
+
+
 
 float_operation :: Parsec [Token] st [Token]
 float_operation = do
@@ -522,31 +576,30 @@ float_operation = do
 
 expression_float :: Parsec [Token] st [Token]
 expression_float = try (do
-                    a <- floatToken <|> idToken
+                    a <- float_values
                     b <- float_operation
-                    c <- floatToken <|> idToken
-                    return ([a]++b++[c]))
+                    c <- float_values
+                    return (a++b++c))
                   <|>
                   try (do
                     a <- absToken
                     b <- beginParenthesisToken
-                    c <- floatToken
+                    c <- float_values
                     d <- endParenthesisToken
-                    return ([a]++[b]++[c]++[d]) )
+                    return ([a]++[b]++c++[d]) )
                   <|>
                   try(do
                     a <- absToken
                     b <- beginParenthesisToken
                     c <- subToken
-                    d <- floatToken <|> idToken
+                    d <- float_values
                     e <- endParenthesisToken
-                    return ([a]++[b]++[c]++[d]++[e]) )
+                    return ([a]++[b]++[c]++d++[e]) )
                   <|>
-                  try(do
+                  do
                     a <- floatToken
-                    return [a])
-                  <|>
-                    return []
+                    return [a]
+                  
 
 
 
@@ -598,11 +651,10 @@ expression_string = try(do
                             h <- endParenthesisToken
                             return ([a] ++ [b] ++ [c] ++ [d] ++ [e] ++ [f] ++ [g] ++ [h]))
                     <|> 
-                        try(do
+                        do
                             a <- stringToken
-                            return [a])
-                     <|> 
-                        return []
+                            return [a]
+                     
                             
 -- array, matrix
 array_expression :: Parsec [Token] st [Token]
@@ -703,7 +755,7 @@ assign = try (do
 expression:: Parsec [Token] st [Token]
 expression = 
             try( do
-                  a <- try array_expression <|> try expressions_int <|> try expression_float <|> invoking_expression
+                  a <- try array_expression <|> try expressions_int <|> try expressions_float <|> invoking_expression
                   return (a) )
                   <|>
              try( do

@@ -15,7 +15,7 @@ tokens :-
 
   $white+                                ;
   "--".*                                 ;
-  main                                { \p s -> Program p }
+  main                                  { \p s -> Program p }
   Begin                                    { \p s -> Begin p}
   End                                    { \p s -> End p}
   BeginIf                                    { \p s -> BeginIf p}
