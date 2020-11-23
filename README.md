@@ -6,6 +6,6 @@
     
     alex Lexer.x
 
-    ghc analisador.hs
+    ghc Parser.hs
     
-    ./analisador
+    ./Parser
