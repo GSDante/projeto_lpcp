@@ -1,6 +1,12 @@
 module Main (main) where
 
 import Lexer
+import Tokens
+import Memory 
+
+import Expressions
+import Types
+
 import Text.Parsec
 import Control.Monad.IO.Class
 
@@ -8,187 +14,8 @@ import System.IO.Unsafe
 
 import Data.List
 
--- parsers para os tokens
 
-programToken = tokenPrim show update_pos get_token where
-  get_token (Program p)  = Just (Program p) 
-  get_token _       = Nothing
-
-funcToken = tokenPrim show update_pos get_token where
-  get_token (Func p) = Just (Func p)
-  get_token _       = Nothing
-
-procToken = tokenPrim show update_pos get_token where
-  get_token (Proc p) = Just (Proc p)
-  get_token _       = Nothing
-
-idToken = tokenPrim show update_pos get_token where
-  get_token (Id p s) = Just (Id p s)
-  get_token _      = Nothing
-
-constToken = tokenPrim show update_pos get_token where
-  get_token (Const p) = Just (Const p)
-  get_token _      = Nothing
-
-
-whileToken = tokenPrim show update_pos get_token where
-  get_token (While p)    = Just (While p)
-  get_token _      = Nothing
-
-doToken = tokenPrim show update_pos get_token where
-  get_token (Do p)   = Just (Do p)
-  get_token _      = Nothing
-
-forToken = tokenPrim show update_pos get_token where
-  get_token (For p)   = Just (For p)
-  get_token _      = Nothing
-
-inToken = tokenPrim show update_pos get_token where
-  get_token (In p)   = Just (In p)
-  get_token _      = Nothing
-
-ifToken = tokenPrim show update_pos get_token where
-  get_token (If p)    = Just (If p)
-  get_token _      = Nothing
-
-elseToken = tokenPrim show update_pos get_token where
-  get_token (Else p)   = Just (Else p)
-  get_token _      = Nothing
-
-beginToken = tokenPrim show update_pos get_token where
-  get_token (Begin p) = Just (Begin p)
-  get_token _     = Nothing
-
-endToken = tokenPrim show update_pos get_token where
-  get_token (End p) = Just (End p)
-  get_token _   = Nothing
-
-beginWhileToken = tokenPrim show update_pos get_token where
-  get_token (BeginWhile p) = Just (BeginWhile p)
-  get_token _     = Nothing
-
-endWhileToken = tokenPrim show update_pos get_token where
-  get_token (EndWhile p) = Just (EndWhile p)
-  get_token _   = Nothing
-
-
-beginForToken = tokenPrim show update_pos get_token where
-  get_token (BeginFor p) = Just (BeginFor p)
-  get_token _     = Nothing
-
-endForToken = tokenPrim show update_pos get_token where
-  get_token (EndFor p) = Just (EndFor p)
-  get_token _   = Nothing
-
-beginIfToken = tokenPrim show update_pos get_token where
-  get_token (BeginIf p) = Just (BeginIf p)
-  get_token _     = Nothing
-
-endIfToken = tokenPrim show update_pos get_token where
-  get_token (EndIf p) = Just (EndIf p)
-  get_token _   = Nothing
-
-beginIndexToken :: ParsecT [Token] st IO (Token)
-beginIndexToken = tokenPrim show update_pos get_token where
-  get_token (BeginIndex p) = Just (BeginIndex p)
-  get_token _     = Nothing
-
-endIndexToken :: ParsecT [Token] st IO (Token)
-endIndexToken = tokenPrim show update_pos get_token where
-  get_token (EndIndex p) = Just (EndIndex p)
-  get_token _     = Nothing
-beginParenthesisToken = tokenPrim show update_pos get_token where
-  get_token (BeginParenthesis p) = Just (BeginParenthesis p)
-  get_token _   = Nothing
-
-endParenthesisToken = tokenPrim show update_pos get_token where
-  get_token (EndParenthesis p) = Just (EndParenthesis p)
-  get_token _   = Nothing  
-
-semiColonToken :: ParsecT [Token] st IO (Token)
-semiColonToken = tokenPrim show update_pos get_token where
-  get_token (SemiColon p) = Just (SemiColon p)
-  get_token _         = Nothing
-
-colonToken :: ParsecT [Token] st IO (Token)
-colonToken = tokenPrim show update_pos get_token where
-  get_token (Colon p) = Just (Colon p)
-  get_token _         = Nothing
-
-commaToken :: ParsecT [Token] st IO (Token)
-commaToken = tokenPrim show update_pos get_token where
-  get_token (Comma p) = Just (Comma p)
-  get_token _     = Nothing
-
-assignToken = tokenPrim show update_pos get_token where
-  get_token (Assign p) = Just (Assign p)
-  get_token _      = Nothing
-
-greaterToken = tokenPrim show update_pos get_token where
-  get_token (Greater p) = Just (Greater p)
-  get_token _       = Nothing
-
-lessToken = tokenPrim show update_pos get_token where
-  get_token (Less p) = Just (Less p)
-  get_token _    = Nothing
-
-greaterEqualToken = tokenPrim show update_pos get_token where
-  get_token (GreaterOrEqual p) = Just (GreaterOrEqual p)
-  get_token _              = Nothing
-
-lessEqualToken = tokenPrim show update_pos get_token where
-  get_token (LessOrEqual p) = Just (LessOrEqual p)
-  get_token _              = Nothing
-
-equalToken = tokenPrim show update_pos get_token where
-  get_token (Equal p) = Just (Equal p)
-  get_token _     = Nothing
-
-diffToken = tokenPrim show update_pos get_token where
-  get_token (Diff p) = Just (Diff p)
-  get_token _              = Nothing
-
-printToken = tokenPrim show update_pos get_token where
-  get_token (Print p) = Just (Print p)
-  get_token _       = Nothing
-
-intToken = tokenPrim show update_pos get_token where
-  get_token (Int p s) = Just (Int p s)
-  get_token _       = Nothing
-
-stringToken = tokenPrim show update_pos get_token where
-  get_token (String p s) = Just (String p s)
-  get_token _       = Nothing
-
-
-boolToken = tokenPrim show update_pos get_token where
-  get_token (Bool p s) = Just (Bool p s)
-  get_token _       = Nothing
-
-
-orToken = tokenPrim show update_pos get_token where
-  get_token (Or p) = Just (Or p)
-  get_token _  = Nothing
-
-
-andToken = tokenPrim show update_pos get_token where
-  get_token (And p) = Just (And p)
-  get_token _   = Nothing
-
-
-floatToken = tokenPrim show update_pos get_token where
-  get_token (Float p s) = Just (Float p s)
-  get_token _       = Nothing
-
-lenghtToken :: ParsecT [Token] st IO (Token)
-lenghtToken = tokenPrim show update_pos get_token where
-  get_token (Lenght p) = Just (Lenght p)
-  get_token _  = Nothing
-
-substrToken :: ParsecT [Token] st IO (Token)
-substrToken = tokenPrim show update_pos get_token where
-  get_token (Substr p) = Just (Substr p)
-  get_token _  = Nothing
+-- parsers para os não-terminais
 
 primTypeToken = intToken <|> stringToken <|> floatToken <|> boolToken
 
@@ -236,64 +63,6 @@ remainingContentMatrix =
     <|> (return [])  
 
 
-sumToken = tokenPrim show update_pos get_token where
-  get_token (Sum p ) = Just (Sum p )
-  get_token _   = Nothing
-
-subToken = tokenPrim show update_pos get_token where
-  get_token (Sub p) = Just (Sub p)
-  get_token _       = Nothing
-
-
-multToken = tokenPrim show update_pos get_token where
-  get_token (Multi p)= Just (Multi p)
-  get_token _       = Nothing
-
-divToken = tokenPrim show update_pos get_token where
-  get_token (Div p) = Just (Div p)
-  get_token _       = Nothing
-
-expToken = tokenPrim show update_pos get_token where
-  get_token (Pow p)= Just (Pow p)
-  get_token _       = Nothing
-
-radToken = tokenPrim show update_pos get_token where
-  get_token (Rad p) = Just (Rad p)
-  get_token _       = Nothing
-
-restoDivToken = tokenPrim show update_pos get_token where
-  get_token (Mod p) = Just (Mod p)
-  get_token _       = Nothing
-
-absToken = tokenPrim show update_pos get_token where
-  get_token (Abs p) = Just (Abs p)
-  get_token _       = Nothing
-
-returnToken = tokenPrim show update_pos get_token where
-  get_token (Return p) = Just (Return p)
-  get_token _       = Nothing
-
-lenToken = tokenPrim show update_pos get_token where
-  get_token (Len p) = Just (Len p)
-  get_token _   = Nothing
-
-transposeToken = tokenPrim show update_pos get_token where
-  get_token (Transpose p) = Just (Transpose p)
-  get_token _   = Nothing
-
-innerProdToken = tokenPrim show update_pos get_token where
-  get_token (InnerProd p) = Just (InnerProd p)
-  get_token _         = Nothing
-
-swapLinesToken :: ParsecT [Token] st IO (Token)
-swapLinesToken = tokenPrim show update_pos get_token where
-  get_token (SwapLines p) = Just (SwapLines p)
-  get_token _             = Nothing
-
-typeToken = tokenPrim show update_pos get_token where
-  get_token (Type p s) = Just (Type p s)
-  get_token _       = Nothing
-
 arrayTypeToken :: ParsecT [Token] ([ActivStack], [Symtable]) IO([Token])
 arrayTypeToken =  do l <- beginIndexToken
                      t <- typeToken
@@ -309,11 +78,6 @@ generalTypeToken = try ( do a <- typeToken
                     <|> do a <- typeToken
                            return ([a])
 
-update_pos :: SourcePos -> Token -> [Token] -> SourcePos
-update_pos pos _ (tok:_) = pos -- necessita melhoria
-update_pos pos _ []      = pos
-
--- parsers para os não-terminais
 
 program :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
 program = do
@@ -408,9 +172,6 @@ declaration = try(do a <- typeToken
                      b <- idToken
                      return (a:[b]))
                  
---return_expression = try(do a <- returnToken
---                           b <- try expression
---                           return (a: b))
 
 return_expression = do a <- returnToken
                        b <- intToken <|> stringToken <|> boolToken <|> floatToken <|> idToken
@@ -888,48 +649,6 @@ remaining_stmts_proc :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
 remaining_stmts_proc = (do a <- semiColonToken
                            b <- stmts_proc
                            return (a:b)) <|> (return [])
-
-
--- id, tipo, valor
-type Symtable = (Token, [Token], Token)
--- nome do escopo
-type ActivStack = String
-
-
--- funções para a tabela de símbolos
-
-get_default_value :: [Token] -> Token
-get_default_value ([Type pos "int" ]) = Int pos 0   
-get_default_value ([Type pos "float" ]) = Float pos 0.0   
-get_default_value ([Type pos "bool" ]) = Bool pos True 
-get_default_value ([Type pos "string" ]) = String pos "" 
-get_default_value ([Type pos "array", BeginIndex pos1 , Type pos2 _, EndIndex pos4  ]) = Array pos []
-get_default_value ([Type pos "matrix", BeginIndex pos1 , Type pos2 _, EndIndex pos4  ]) = Matrix pos [[]]
- 
-
-
-symtable_insert :: Symtable -> ([ActivStack], [Symtable])-> ([ActivStack], [Symtable])
-symtable_insert symbol (activ,[])  = (activ,[symbol])
-symtable_insert symbol (activ,table)  = (activ,[symbol]++table)
-
-
-
-symtable_update :: Symtable -> ([ActivStack], [Symtable])-> ([ActivStack], [Symtable])
-symtable_update _ (activ, []) = fail "variable not found"
-symtable_update (id1, t1, v1) ( activ, symt ) = 
-                               (activ, symtable_update_auxiliar (id1, t1, v1) symt )
-
-symtable_update_auxiliar :: Symtable -> ([Symtable])-> ([Symtable])
-symtable_update_auxiliar (id1, t1, v1) ((id2, t2, v2):t) = 
-                                if id1 == id2 && t1 == t2 then ((id1, t1, v1) : t)
-                                else (id2, t2, v2) : symtable_update_auxiliar (id1, t1, v1) t
-
-
---symtable_remove :: (Token,Token) ->  ([ActivStack], [Symtable])->  [(ActivStack, Symtable)]
---symtable_remove _ [] = fail "variable not found"
---symtable_remove (id1, v1) ((id2, v2):t) = 
---                               if id1 == id2 then t
---                               else (id2, v2) : symtable_remove (id1, v1) t                               
 
 
 -- invocação do parser para o símbolo de partida 
