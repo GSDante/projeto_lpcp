@@ -1,4 +1,4 @@
 *.hi
 *.o
-analisador
+Parser
 Lexer.hs

@@ -3,6 +3,9 @@ module Lexer where
 
 import System.IO
 import System.IO.Unsafe
+
+import Data.List
+
 }
 
 %wrapper "posn"
@@ -146,7 +149,9 @@ data Token =
   Int AlexPosn Int |
   Float AlexPosn Float|
   Bool AlexPosn Bool |
-  String AlexPosn String  
+  String AlexPosn String  |
+  Array AlexPosn [ Float ]|
+  Matrix AlexPosn [ [Float] ]
   deriving (Eq,Show)
 
 
