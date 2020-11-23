@@ -290,6 +290,21 @@ typeToken = tokenPrim show update_pos get_token where
   get_token (Type p s) = Just (Type p s)
   get_token _       = Nothing
 
+arrayTypeToken :: ParsecT [Token] [(Token,Token)] IO([Token])
+arrayTypeToken =  do l <- beginIndexToken
+                     t <- typeToken
+                     r <- endIndexToken
+                     return (l : t : [r])
+
+generalTypeToken :: ParsecT [Token] [(Token,Token)] IO([Token])
+generalTypeToken = try ( do a <- typeToken
+                            b <- beginIndexToken
+                            c <- typeToken
+                            d <- endIndexToken
+                            return (a : b: c:[d]))
+                    <|> do a <- typeToken
+                           return ([a])
+
 update_pos :: SourcePos -> Token -> [Token] -> SourcePos
 update_pos pos _ (tok:_) = pos -- necessita melhoria
 update_pos pos _ []      = pos
@@ -314,7 +329,7 @@ subprograms = try (do
 subprogram :: ParsecT [Token] [(Token,Token)] IO([Token])
 subprogram = do 
             a <- subprogramToken 
-            b <- typeToken
+            b <- generalTypeToken
             c <- idToken
             d <- beginParenthesisToken
             e <- parameters
@@ -323,15 +338,15 @@ subprogram = do
             h <- stmts
             i <- endToken
             j <- subprograms
-            return (a:b:c:[d]++e++[f]++[g]++h++[i] ++ j)
+            return (a :b ++ c:[d]++e++[f]++[g]++h++[i] ++ j)
 
 parameters :: ParsecT [Token] [(Token,Token)] IO([Token])
 parameters = try (do
-            a <- typeToken
+            a <- generalTypeToken
             b <- idToken
             c <- semiColonToken
             d <- parameters 
-            return (a:b:[c]++d) )
+            return (a ++ b :[c]++d) )
             <|>
             return []
 
@@ -593,25 +608,25 @@ array_operators = do a <- sumToken <|> subToken <|> multToken <|> divToken
 
 assign :: ParsecT [Token] [(Token,Token)] IO([Token])
 assign = try (do
-          t <- typeToken
+          t <- generalTypeToken
           a <- idToken
           b <- assignToken
           c <- expression
           updateState(symtable_insert (a, get_default_value t))
           s <- getState
           liftIO (print s)
-          return (t:a:b:c))
+          return (t ++ a:b:c))
           <|>
           try (do
           m <- constToken
-          t <- typeToken
+          t <- generalTypeToken
           a <- idToken
           b <- assignToken
           c <- expression
           updateState(symtable_insert (a, get_default_value t))
           s <- getState
           liftIO (print s)
-          return (m:t:a:b:c))
+          return (m : t ++a:b:c))
           <|>
           do
           a <- idToken
@@ -713,13 +728,13 @@ remaining_stmts = (do a <- semiColonToken
 
 -- funções para a tabela de símbolos
 
-get_default_value :: Token -> Token
-get_default_value (Type pos "int" ) = Int pos 0   
-get_default_value (Type pos "float" ) = Float pos 0.0   
-get_default_value (Type pos "bool" ) = Bool pos True 
-get_default_value (Type pos "string" ) = String pos "" 
-get_default_value (Type pos "array" ) = Array pos []
-get_default_value (Type pos "matrix" ) = Matrix pos [[]]
+get_default_value :: [Token] -> Token
+get_default_value ([Type pos "int" ]) = Int pos 0   
+get_default_value ([Type pos "float" ]) = Float pos 0.0   
+get_default_value ([Type pos "bool" ]) = Bool pos True 
+get_default_value ([Type pos "string" ]) = String pos "" 
+get_default_value ([Type pos "array", BeginIndex pos1 , Type pos2 _, EndIndex pos4  ]) = Array pos []
+get_default_value ([Type pos "matrix", BeginIndex pos1 , Type pos2 _, EndIndex pos4  ]) = Matrix pos [[]]
  
 
 symtable_insert :: (Token,Token) -> [(Token,Token)] -> [(Token,Token)]
