@@ -48,6 +48,7 @@ tokens :-
   print                                  { \p s -> Print p}
   while                                  { \p s -> While p}
   func                                   { \p s -> Func p}
+  proc                                   { \p s -> Proc p}
   >                                      { \p s -> Greater p}
   "<"                                    { \p s -> Less p}
   ">="                                   { \p s -> GreaterOrEqual p}
@@ -139,6 +140,7 @@ data Token =
   For AlexPosn|
   While AlexPosn|
   Func AlexPosn|
+  Proc AlexPosn|
   Do  AlexPosn|
   Return  AlexPosn|
   Const AlexPosn|
