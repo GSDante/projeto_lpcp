@@ -4,15 +4,17 @@ proc foo2(int a; string b;) Begin
 	int t;
 	
 	float c;
+	int c = soma(a, b, c);
 End
 
-func void foo (string b; int a;) Begin
+func float foo (string b; int a;) Begin
     print "aa";
     return 5.6;
 End
 
-proc foo2(int a; string b;) Begin
+func int foo2(int a; string b;) Begin
 	print "aab";
+	a = soma(a, b);
 End
 
 

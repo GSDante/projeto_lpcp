@@ -294,8 +294,7 @@ expression_int = try (do
                    try(do
                     a <- intToken
                     return [a])
-                  <|>
-                  return []
+                  
 
 float_operation :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
 float_operation = do
@@ -328,8 +327,6 @@ expression_float = try (do
                   try(do
                     a <- floatToken
                     return [a])
-                  <|>
-                    return []
 
 
 
@@ -384,8 +381,6 @@ expression_string = try(do
                         try(do
                             a <- stringToken
                             return [a])
-                     <|> 
-                        return []
                             
 -- array, matrix
 array_expression :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])

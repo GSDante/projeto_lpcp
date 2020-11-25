@@ -51,26 +51,26 @@ main Begin
     float w = 2.3;
     print "1oi";
 
-    array ar[int] = [1, "2"];
+    array[int] ar = [1, "2"];
     int len = #ar;
     int prod = ar .* ar;
     int prod = [1, 2] .* [[1, 2], [3, 4]];
 
-    matrix m[int] = [[[1, 2], [2, 3]], [[1, 2], [2, 3]]];
+    matrix[int] m = [[[1, 2], [2, 3]], [[1, 2], [2, 3]]];
     int index = ar[1];
     int index2 = ar[x];
     int index3 = ar[[1, 0]];
 
     int index4 = m[1: 1 , 2: 2];
 
-    array transpose[int] = ar';
-    array sum[int] = [[1, 2], [3, 4]] + [[3, 4], [5, 6]];
-    array swapped[int] = [[1, 2], [3, 4], [5, 6]] <- (1, 2) ;
+    array[int] transpose = ar';
+    array[int] sum = [[1, 2], [3, 4]] + [[3, 4], [5, 6]];
+    array[int] swapped = [[1, 2], [3, 4], [5, 6]] <- (1, 2) ;
     bool test = [[1, 2], [3, 4]] == [[1, 2], [3, 4]] ;
 
 
-    int a = 2 + 3;
-    int b = 2 * 3;
+    int a = 2 + 3 + 4;
+    int b = 2 * (3 - x);
     int c = 4 / 2;
     int d = 4 - 1;
     int e = 2 ^ 2;
