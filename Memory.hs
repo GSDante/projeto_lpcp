@@ -39,8 +39,16 @@ symtable_update_auxiliar (id1, t1, v1) ((id2, t2, v2):t) =
                                 else (id2, t2, v2) : symtable_update_auxiliar (id1, t1, v1) t
 
 
---symtable_remove :: (Token,Token) ->  ([ActivStack], [Symtable])->  [(ActivStack, Symtable)]
---symtable_remove _ [] = fail "variable not found"
---symtable_remove (id1, v1) ((id2, v2):t) = 
---                               if id1 == id2 then t
---                               else (id2, v2) : symtable_remove (id1, v1) t                               
+
+stack_insert :: ActivStack -> ([ActivStack], [Symtable])-> ([ActivStack], [Symtable])
+stack_insert scope ([],symt)  = ([scope],symt)
+stack_insert scope (activ,symt)  = ([scope] ++ activ,symt)
+
+
+stack_remove :: ActivStack -> ([ActivStack], [Symtable])-> ([ActivStack], [Symtable])
+stack_remove scope ([],symt) = fail "variable not found"
+stack_remove scope ((h:b),symt) = (b, symt)
+
+-- Uma variável tem um escopo, tem que salvar esse escopo.  
+-- Quando uma variável for ser salva, acho que dá pra pegar a pilha de ativação
+-- Ver qual é o escopo de lá, o topo da pilha, e salvar com esse escopo

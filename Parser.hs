@@ -136,6 +136,9 @@ parameters = try (do
 mainProgram :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
 mainProgram = do
             a <- programToken 
+            updateState(stack_insert ("main"))
+            s <- getState
+            liftIO (print s)
             b <- beginToken 
             c <- stmts
             d <- endToken
@@ -653,7 +656,7 @@ parser :: [Token] -> IO (Either ParseError [Token])
 parser tokens = runParserT program ([],[]) "Error message" tokens
 
 main :: IO ()
-main = case unsafePerformIO (parser (getTokens "Examples/program3.pe")) of
+main = case unsafePerformIO (parser (getTokens "Examples/program2.pe")) of
             { Left err -> print err; 
               Right ans -> print ans
             }
