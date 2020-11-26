@@ -1,6 +1,9 @@
+int a;
 proc foo2(int a; string b;) Begin
 	int a;
-	string b;
+	string b = "b" + "r"
+
+	;
 	int t;
 	
 	float c;
@@ -25,5 +28,6 @@ End
 main Begin
 
     int x = (6 + 5) + 6 * 2 / 2 + 10 +2;
+    float y = 2.3 + 6.1 * (1.0+3.2);
 
 End

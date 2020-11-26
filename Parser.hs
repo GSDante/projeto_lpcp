@@ -79,12 +79,27 @@ generalTypeToken = try ( do a <- typeToken
                            return ([a])
 
 
-program :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+program ::  ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
 program = do
-            a <- subprograms 
-            b <- mainProgram
+            a <- global_variable
+            b <- subprograms 
+            c <- mainProgram
             eof
-            return (a ++ b) 
+            return (a ++ b ++ c) 
+
+global_variable ::  ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+global_variable = do
+                a <- try assign <|> try declaration
+                b <- semiColonToken
+                c <- remaining_global_variable
+                return (a ++ [b] ++ c)
+                
+remaining_global_variable ::  ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+remaining_global_variable = try (do
+                a <- global_variable
+                return(a))
+                <|>
+                return []
 
 subprograms :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
 subprograms = try (do
@@ -301,32 +316,64 @@ float_operation = do
         a <- sumToken <|> subToken <|> multToken <|> divToken
         return [a]
 
+add_expression_float :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+add_expression_float = try (do
+                    a <- float_operation
+                    b <- float_values
+                    c <- try add_expression_float
+                    return (a ++ b)
+                  )
+                  <|> 
+                    return []
+                  
+expressions_float :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+expressions_float = try(do
+                  a <- try expression_float
+                  b <- try add_expression_float
+                  return (a++b))
+                <|>
+                  (do
+                    a <- expression_float
+                    return (a))
+
+
+float_values :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+float_values = try(do
+              a <- beginParenthesisToken
+              b <- try expression_float
+              c <- endParenthesisToken
+              return ([a]++b++[c]))
+              <|>
+              (do
+              a <- floatToken <|> idToken
+              return [a])     
 
 expression_float :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
 expression_float = try (do
-                    a <- floatToken <|> idToken
+                    a <- float_values
                     b <- float_operation
-                    c <- floatToken <|> idToken
-                    return ([a]++b++[c]))
+                    c <- float_values
+                    return (a++b++c))
                   <|>
                   try (do
                     a <- absToken
                     b <- beginParenthesisToken
-                    c <- floatToken
+                    c <- float_values
                     d <- endParenthesisToken
-                    return ([a]++[b]++[c]++[d]) )
+                    return ([a]++[b]++c++[d]) )
                   <|>
                   try(do
                     a <- absToken
                     b <- beginParenthesisToken
                     c <- subToken
-                    d <- floatToken <|> idToken
+                    d <- float_values
                     e <- endParenthesisToken
-                    return ([a]++[b]++[c]++[d]++[e]) )
+                    return ([a]++[b]++[c]++d++[e]) )
                   <|>
-                  try(do
+                  do
                     a <- floatToken
-                    return [a])
+                    return [a]
+                  
 
 
 
@@ -335,48 +382,78 @@ string_operation = do
            a <- equalToken <|> diffToken
            return [a]
 
+string_values ::ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+string_values = try(do
+              a <- beginParenthesisToken
+              b <- try expression_string
+              c <- endParenthesisToken
+              return ([a]++b++[c]))
+              <|>
+              (do
+              a <- stringToken <|> idToken
+              return [a])
+
+add_expression_string :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+add_expression_string = try (do
+                    a <- string_operation
+                    b <- string_values
+                    c <- try add_expression_string
+                    return (a ++ b)
+                  )
+                  <|> 
+                    return []
+
+expressions_string :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+expressions_string = try(do
+                  a <- try expression_string
+                  b <- try add_expression_string
+                  return (a++b))
+                <|>
+                  (do
+                    a <- expression_string
+                    return (a))
 
 expression_string :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
 expression_string = try(do
-                      a <- stringToken <|> idToken
+                      a <- string_values
                       b <- sumToken
-                      c <- stringToken <|> idToken
-                      return ([a] ++ [b] ++ [c]))
+                      c <- string_values
+                      return (a ++ [b] ++ c))
                     <|>
                     try(do 
-                        a <- stringToken <|> idToken
+                        a <- string_values
                         b <- multToken
                         c <- intToken
-                        return ([a] ++ [b] ++ [c]))
+                        return (a ++ [b] ++ [c]))
                     <|>
                          try(do
                          a <- intToken
                          b <- multToken
-                         c <- stringToken <|> idToken
-                         return ([a] ++ [b] ++ [c]))
+                         c <- string_values
+                         return ([a] ++ [b] ++ c))
                     <|>
                         try(do
                            a <- lenghtToken
                            b <- beginParenthesisToken
-                           c <- stringToken <|> idToken
+                           c <- string_values
                            d <- endParenthesisToken
-                           return ([a] ++ [b] ++ [c] ++ [d]))
+                           return ([a] ++ [b] ++ c ++ [d]))
                     <|>
                         try(do
-                            a <- stringToken <|> idToken
+                            a <- string_values
                             b <- string_operation
-                            c <- stringToken <|> idToken
-                            return ([a]++b++[c]))
+                            c <- string_values
+                            return (a++b++c))
                     <|> try(do 
                             a <- substrToken
                             b <- beginParenthesisToken
-                            c <- stringToken <|> idToken
+                            c <- string_values
                             d <- commaToken
                             e <- intToken
                             f <- commaToken
                             g <- intToken
                             h <- endParenthesisToken
-                            return ([a] ++ [b] ++ [c] ++ [d] ++ [e] ++ [f] ++ [g] ++ [h]))
+                            return ([a] ++ [b] ++ c ++ [d] ++ [e] ++ [f] ++ [g] ++ [h]))
                     <|> 
                         try(do
                             a <- stringToken
@@ -486,7 +563,7 @@ assign = try (do
 expression:: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
 expression = 
             try( do
-                  a <- try array_expression <|> try expressions_int <|> try expression_float <|> invoking_expression
+                  a <- try array_expression <|> try expressions_int <|> try expressions_float <|> invoking_expression
                   return (a) )
                   <|>
              try( do
@@ -494,7 +571,7 @@ expression =
                   return (a) )
                   <|>
              try( do
-                  a <- try expression_string
+                  a <- try expressions_string
                   return (a))
                   <|>
              try( do 
