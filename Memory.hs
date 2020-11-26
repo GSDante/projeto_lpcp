@@ -26,6 +26,20 @@ compatible (Int _ _) (Int _ _) = True
 compatible _ _ = False
 
 
+get_type :: (Token, [Token], Token) -> ([ActivStack], [Symtable]) -> Symtable
+get_type _ (activ,[]) = error "variable not found"
+get_type (id1, t1, v1) (activ,symt) = get_type_auxiliar (get_top activ, id1, t1, v1) symt
+    
+
+
+get_type_auxiliar :: Symtable -> ([Symtable])-> Symtable
+get_type_auxiliar (es1, id1, t1, v1) ((es2, id2, t2, v2):t) =     
+                                if id1 == id2 && es1 == es2 then (es1, id1, t1, v1)
+                                else if t == [] then error "variable not found"
+                                else get_type_auxiliar (es1, id1, t1, v1) t
+
+
+
 
 -- funções para a tabela de símbolos
 
