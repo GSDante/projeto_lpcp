@@ -238,9 +238,9 @@ expressao_logica = try(do
 
 expressao_boolean :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
 expressao_boolean = do
-                a <- intToken <|> idToken
+                a <- intToken <|> floatToken <|> boolToken <|> stringToken <|> idToken
                 b <- operacao_boolean
-                c <- intToken <|> idToken
+                c <- intToken <|> floatToken <|> boolToken <|> stringToken <|> idToken
                 return ([a]++b++[c])
 
 
@@ -379,7 +379,7 @@ expression_float = try (do
 
 string_operation :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
 string_operation = do
-           a <- equalToken <|> diffToken
+           a <- equalToken <|> diffToken <|> sumToken
            return [a]
 
 string_values ::ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
@@ -413,47 +413,54 @@ expressions_string = try(do
                     a <- expression_string
                     return (a))
 
-expression_string :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
-expression_string = try(do
-                      a <- string_values
-                      b <- sumToken
-                      c <- string_values
-                      return (a ++ [b] ++ c))
-                    <|>
-                    try(do 
-                        a <- string_values
-                        b <- multToken
-                        c <- intToken
-                        return (a ++ [b] ++ [c]))
-                    <|>
-                         try(do
-                         a <- intToken
-                         b <- multToken
+sum_string::ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+sum_string = try(do
+                  a <- string_values
+                  b <- sumToken
+                  c <- string_values
+                  return (a ++ [b] ++ c))
+
+mult_string::ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+mult_string = try(do
+                    a <- string_values
+                    b <- multToken
+                    c <- intToken
+                    return (a ++ [b] ++ [c]))
+                <|>
+                do a <- intToken
+                   b <- multToken
+                   c <- string_values
+                   return ([a] ++ [b] ++ c)
+
+len_string::ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+len_string = try(do
+                    a <- lenghtToken
+                    b <- beginParenthesisToken
+                    c <- string_values
+                    d <- endParenthesisToken
+                    return ([a] ++ [b] ++ c ++ [d]))
+
+string_comparation::ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+string_comparation = try(do
+                         a <- string_values
+                         b <- string_operation
                          c <- string_values
-                         return ([a] ++ [b] ++ c))
-                    <|>
-                        try(do
-                           a <- lenghtToken
-                           b <- beginParenthesisToken
-                           c <- string_values
-                           d <- endParenthesisToken
-                           return ([a] ++ [b] ++ c ++ [d]))
-                    <|>
-                        try(do
-                            a <- string_values
-                            b <- string_operation
-                            c <- string_values
-                            return (a++b++c))
-                    <|> try(do 
-                            a <- substrToken
-                            b <- beginParenthesisToken
-                            c <- string_values
-                            d <- commaToken
-                            e <- intToken
-                            f <- commaToken
-                            g <- intToken
-                            h <- endParenthesisToken
-                            return ([a] ++ [b] ++ c ++ [d] ++ [e] ++ [f] ++ [g] ++ [h]))
+                         return (a++b++c))
+
+substr_operation::ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+substr_operation = try(do
+                         a <- substrToken
+                         b <- beginParenthesisToken
+                         c <- string_values
+                         d <- commaToken
+                         e <- intToken
+                         f <- commaToken
+                         g <- intToken
+                         h <- endParenthesisToken
+                         return ([a] ++ [b] ++ c ++ [d] ++ [e] ++ [f] ++ [g] ++ [h]))
+
+expression_string :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+expression_string = len_string <|> try sum_string <|> try mult_string <|> try string_operation <|> try string_comparation <|> try substr_operation
                     <|> 
                         try(do
                             a <- stringToken
