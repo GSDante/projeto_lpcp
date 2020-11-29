@@ -4,7 +4,7 @@ import Lexer
 
 
 
--- id, tipo, valor
+-- escopo, id, tipo, valor
 type Symtable = (String, Token, [Token], Token)
 -- nome do escopo
 type ActivStack = String
@@ -49,18 +49,18 @@ symtable_insert (id1, t1, v1) (activ,table)  = (activ,[(get_top activ, id1, t1, 
 
 
 
-symtable_update :: (Token, [Token], Token) -> ([ActivStack], [Symtable])-> ([ActivStack], [Symtable])
+symtable_update :: (Token, Token) -> ([ActivStack], [Symtable])-> ([ActivStack], [Symtable])
 symtable_update _ (activ, []) = fail "variable not found"
-symtable_update (id1, t1, v1) ( activ, symt ) = 
-                               (activ, symtable_update_auxiliar ( get_top activ, id1, t1, v1) symt )
+symtable_update (id1, v1) ( activ, symt ) = 
+                               (activ, symtable_update_auxiliar ( get_top activ, id1, v1) symt )
 
 
 
-symtable_update_auxiliar :: Symtable -> ([Symtable])-> ([Symtable])
-symtable_update_auxiliar (es1, id1, t1, v1) ((es2, id2, t2, v2):t) = 
-                                if id1 == id2 && t1 == t2 && es1 == es2 then ((es1, id1, t1, v1) : t)
-                                else (es2, id2, t2, v2) : symtable_update_auxiliar (es1, id1, t1, v1) t
-
+symtable_update_auxiliar :: (String, Token, Token) -> ([Symtable])-> ([Symtable])
+symtable_update_auxiliar _ ([]) = fail "variable not found"
+symtable_update_auxiliar (es1, Id pos1 id1, v1) ((es2, Id pos2 id2, t2, v2):t) = 
+                                if id1 == id2 && es1 == es2 then ((es1, Id pos1 id1, t2, v1) : t)
+                                else (es2, Id pos2 id2, t2, v2) : symtable_update_auxiliar (es1, Id pos1 id1, v1) t
 
 
 stack_insert :: ActivStack -> ([ActivStack], [Symtable])-> ([ActivStack], [Symtable])

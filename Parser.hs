@@ -463,28 +463,21 @@ assign = try (do
           t <- generalTypeToken
           a <- idToken
           b <- assignToken
-          c <- expression
-          updateState(symtable_insert (a, t, get_default_value t))
+          c <- intToken <|> stringToken <|> boolToken <|> floatToken <|> idToken
+          updateState(symtable_insert (a, t, c))
           s <- getState
           liftIO (print s)
-          return (t ++ a:b:c))
-          <|>
-          try (do
-          m <- constToken
-          t <- generalTypeToken
-          a <- idToken
-          b <- assignToken
-          c <- expression
-          updateState(symtable_insert (a, t, get_default_value t))
-          s <- getState
-          liftIO (print s)
-          return (m : t ++a:b:c))
+          return (t ++ a:b:[c]))
           <|>
           do
           a <- idToken
           b <- assignToken
-          c <- expression
-          return (a:b:c)
+          c <- intToken <|> stringToken <|> boolToken <|> floatToken <|> idToken
+          updateState(symtable_update (a, c))
+          s <- getState
+          liftIO (print s)
+          return (a:b:[c])
+          
 
 expression:: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
 expression = 
