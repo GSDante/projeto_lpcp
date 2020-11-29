@@ -23,7 +23,12 @@ get_default_value ([Type pos "matrix", BeginIndex pos1 , Type pos2 _, EndIndex p
 -- funções para verificação de tipos
 compatible :: Token -> Token -> Bool
 compatible (Int _ _) (Int _ _) = True
+compatible (Float _ _) (Float _ _) = True
+compatible (Bool _ _) (Bool _ _) = True
+compatible (String _ _) (String _ _) = True
 compatible _ _ = False
+
+
 
 -- recebe o id, compara id e escopo e retorna o valor
 get_type :: Token -> ([ActivStack], [Symtable]) -> Token

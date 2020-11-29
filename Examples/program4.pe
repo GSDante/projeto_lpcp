@@ -1,0 +1,19 @@
+
+
+main Begin
+
+    int x = 29;
+    x = 2;
+
+    string a = "ola";
+    a = "ola mundo";
+
+    float b = 4.3;
+    b = 9.2;
+
+    bool c = True;
+    c = False;
+
+    int y;
+    
+End

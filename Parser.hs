@@ -173,6 +173,9 @@ stmt_proc = try assign <|> try declaration <|>  try invoking_expression <|>
 declaration :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
 declaration = try(do a <- typeToken
                      b <- idToken
+                     updateState(symtable_insert (b, [a], get_default_value [a] ))
+                     s <- getState
+                     liftIO (print s)
                      return (a:[b]))
                  
 
@@ -668,7 +671,7 @@ parser :: [Token] -> IO (Either ParseError [Token])
 parser tokens = runParserT program ([],[]) "Error message" tokens
 
 main :: IO ()
-main = case unsafePerformIO (parser (getTokens "Examples/program2.pe")) of
+main = case unsafePerformIO (parser (getTokens "Examples/program4.pe")) of
             { Left err -> print err; 
               Right ans -> print ans
             }
