@@ -464,15 +464,29 @@ assign = try (do
           a <- idToken
           b <- assignToken
           c <- intToken <|> stringToken <|> boolToken <|> floatToken <|> idToken
+          --c <- expression
           updateState(symtable_insert (a, t, c))
           s <- getState
           liftIO (print s)
           return (t ++ a:b:[c]))
           <|>
+          try (do
+          m <- constToken
+          t <- generalTypeToken
+          a <- idToken
+          b <- assignToken
+          c <- intToken <|> stringToken <|> boolToken <|> floatToken <|> idToken
+          --c <- expression
+          updateState(symtable_insert (a, t, c))
+          s <- getState
+          liftIO (print s)
+          return (m : t ++a:b:[c]))
+          <|>
           do
           a <- idToken
           b <- assignToken
           c <- intToken <|> stringToken <|> boolToken <|> floatToken <|> idToken
+          --c <- expression
           s <- getState
           if (not (compatible (get_type a s) c)) then fail "type mismatch"
           else 
