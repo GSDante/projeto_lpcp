@@ -1,0 +1,5 @@
+main Begin
+    
+    array[int] a = [1, 2];
+
+End

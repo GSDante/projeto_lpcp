@@ -461,7 +461,7 @@ assign = try (do
           a <- idToken
           b <- assignToken
           c <- expression
-          updateState(symtable_insert (a, t, get_default_value t))
+          updateState(symtable_insert (a, t, eval c))
           s <- getState
           liftIO (print s)
           return (t ++ a:b:c))
@@ -472,7 +472,7 @@ assign = try (do
           a <- idToken
           b <- assignToken
           c <- expression
-          updateState(symtable_insert (a, t, get_default_value t))
+          --updateState(symtable_insert (a, t, get_default_value t))
           s <- getState
           liftIO (print s)
           return (m : t ++a:b:c))
@@ -653,7 +653,7 @@ parser :: [Token] -> IO (Either ParseError [Token])
 parser tokens = runParserT program ([],[]) "Error message" tokens
 
 main :: IO ()
-main = case unsafePerformIO (parser (getTokens "Examples/program3.pe")) of
+main = case unsafePerformIO (parser (getTokens "Examples/program4.pe")) of
             { Left err -> print err; 
               Right ans -> print ans
             }

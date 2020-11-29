@@ -2,10 +2,13 @@ module Memory where
 
 import Lexer
 
-
+                   
+data Type = IntType Int |
+            FloatType Float | Vector [Type]
+            deriving (Eq, Show)
 
 -- id, tipo, valor
-type Symtable = (Token, [Token], Token)
+type Symtable = (Token, [Token] , Type)
 -- nome do escopo
 type ActivStack = String
 
