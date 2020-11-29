@@ -473,10 +473,15 @@ assign = try (do
           a <- idToken
           b <- assignToken
           c <- intToken <|> stringToken <|> boolToken <|> floatToken <|> idToken
-          updateState(symtable_update (a, c))
           s <- getState
-          liftIO (print s)
-          return (a:b:[c])
+          if (not (compatible (get_type a s) c)) then fail "type mismatch"
+          else 
+            do 
+            updateState(symtable_update (a, c))
+            s <- getState
+            liftIO (print s)
+            return (a:b:[c])
+          
           
 
 expression:: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])

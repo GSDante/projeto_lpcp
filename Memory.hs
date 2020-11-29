@@ -25,18 +25,18 @@ compatible :: Token -> Token -> Bool
 compatible (Int _ _) (Int _ _) = True
 compatible _ _ = False
 
-
-get_type :: (Token, [Token], Token) -> ([ActivStack], [Symtable]) -> Symtable
+-- recebe o id, compara id e escopo e retorna o valor
+get_type :: Token -> ([ActivStack], [Symtable]) -> Token
 get_type _ (activ,[]) = error "variable not found"
-get_type (id1, t1, v1) (activ,symt) = get_type_auxiliar (get_top activ, id1, t1, v1) symt
+get_type id1 (activ,symt) = get_type_auxiliar (get_top activ, id1) symt
     
 
 
-get_type_auxiliar :: Symtable -> ([Symtable])-> Symtable
-get_type_auxiliar (es1, id1, t1, v1) ((es2, id2, t2, v2):t) =     
-                                if id1 == id2 && es1 == es2 then (es1, id1, t1, v1)
-                                else if t == [] then error "variable not found"
-                                else get_type_auxiliar (es1, id1, t1, v1) t
+get_type_auxiliar :: (String, Token) -> ([Symtable])-> Token
+get_type_auxiliar _ ([]) = error "variable not found"
+get_type_auxiliar (es1, Id pos1 id1) ((es2, Id pos2 id2, t2, v2):t) =     
+                                if id1 == id2 && es1 == es2 then v2
+                                else get_type_auxiliar (es1, Id pos1 id1) t
 
 
 
