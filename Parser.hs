@@ -151,6 +151,9 @@ parameters = try (do
 mainProgram :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
 mainProgram = do
             a <- programToken 
+            updateState(stack_insert ("main"))
+            s <- getState
+            liftIO (print s)
             b <- beginToken 
             c <- stmts
             d <- endToken
@@ -185,6 +188,9 @@ stmt_proc = try assign <|> try declaration <|>  try invoking_expression <|>
 declaration :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
 declaration = try(do a <- typeToken
                      b <- idToken
+                     updateState(symtable_insert (b, [a], get_default_value [a] ))
+                     s <- getState
+                     liftIO (print s)
                      return (a:[b]))
                  
 
@@ -544,28 +550,40 @@ assign = try (do
           t <- generalTypeToken
           a <- idToken
           b <- assignToken
-          c <- expression
-          updateState(symtable_insert (a, t, get_default_value t))
+          c <- intToken <|> stringToken <|> boolToken <|> floatToken <|> idToken
+          --c <- expression
+          updateState(symtable_insert (a, t, c))
           s <- getState
           liftIO (print s)
-          return (t ++ a:b:c))
+          return (t ++ a:b:[c]))
           <|>
           try (do
           m <- constToken
           t <- generalTypeToken
           a <- idToken
           b <- assignToken
-          c <- expression
-          updateState(symtable_insert (a, t, get_default_value t))
+          c <- intToken <|> stringToken <|> boolToken <|> floatToken <|> idToken
+          --c <- expression
+          updateState(symtable_insert (a, t, c))
           s <- getState
           liftIO (print s)
-          return (m : t ++a:b:c))
+          return (m : t ++a:b:[c]))
           <|>
           do
           a <- idToken
           b <- assignToken
-          c <- expression
-          return (a:b:c)
+          c <- intToken <|> stringToken <|> boolToken <|> floatToken <|> idToken
+          --c <- expression
+          s <- getState
+          if (not (compatible (get_type a s) c)) then fail "type mismatch"
+          else 
+            do 
+            updateState(symtable_update (a, c))
+            s <- getState
+            liftIO (print s)
+            return (a:b:[c])
+          
+          
 
 expression:: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
 expression = 
@@ -599,8 +617,18 @@ read_exp = do
         a <- readToken
         b <- greaterToken
         c <- idToken
-        s <- liftIO $ getLine
+        s <- liftIO $ getLine -- recupera texto inserido pela linha de comando
+        st <- getState
+        -- atualiza na tabela de simbolos
+        updateState(symtable_update (c, generateToken (get_type c st) (show s) ))
+        st <- getState
+        liftIO (print st)
         return (a:[b])
+
+generateToken :: Token -> String -> Token
+generateToken (String  p _) s = (String p s)
+generateToken (Int p _) s = (Int p (read (read s)) )
+generateToken (Float p _) s = (Float p (read (read s)) )
 
 while :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
 while = do
@@ -745,7 +773,7 @@ parser :: [Token] -> IO (Either ParseError [Token])
 parser tokens = runParserT program ([],[]) "Error message" tokens
 
 main :: IO ()
-main = case unsafePerformIO (parser (getTokens "Examples/program4.pe")) of
+main = case unsafePerformIO (parser (getTokens "Examples/program5.pe")) of
             { Left err -> print err; 
               Right ans -> print ans
             }

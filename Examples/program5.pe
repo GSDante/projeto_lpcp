@@ -1,0 +1,11 @@
+int a;
+
+main Begin
+
+    string c;
+    read > c;
+
+    int i;
+    read > i;
+    
+End
