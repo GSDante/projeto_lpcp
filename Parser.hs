@@ -88,11 +88,12 @@ program = do
             return (a ++ b ++ c) 
 
 global_variable ::  ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
-global_variable = do
+global_variable = try(do
                 a <- try assign <|> try declaration
                 b <- semiColonToken
                 c <- remaining_global_variable
-                return (a ++ [b] ++ c)
+                return (a ++ [b] ++ c))
+                <|> return []
                 
 remaining_global_variable ::  ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
 remaining_global_variable = try (do
@@ -737,7 +738,7 @@ parser :: [Token] -> IO (Either ParseError [Token])
 parser tokens = runParserT program ([],[]) "Error message" tokens
 
 main :: IO ()
-main = case unsafePerformIO (parser (getTokens "Examples/program3.pe")) of
+main = case unsafePerformIO (parser (getTokens "Examples/program1.pe")) of
             { Left err -> print err; 
               Right ans -> print ans
             }
