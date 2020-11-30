@@ -88,11 +88,12 @@ program = do
             return (a ++ b ++ c) 
 
 global_variable ::  ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
-global_variable = do
+global_variable = try(do
                 a <- try assign <|> try declaration
                 b <- semiColonToken
                 c <- remaining_global_variable
-                return (a ++ [b] ++ c)
+                return (a ++ [b] ++ c))
+                <|> return []
                 
 remaining_global_variable ::  ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
 remaining_global_variable = try (do
@@ -620,15 +621,15 @@ read_exp = do
         s <- liftIO $ getLine -- recupera texto inserido pela linha de comando
         st <- getState
         -- atualiza na tabela de simbolos
-        updateState(symtable_update (c, generateToken (get_type c st) (show s) ))
+        updateState(symtable_update (c, getTokenFrom (get_type c st) (show s) ))
         st <- getState
         liftIO (print st)
         return (a:[b])
 
-generateToken :: Token -> String -> Token
-generateToken (String  p _) s = (String p s)
-generateToken (Int p _) s = (Int p (read (read s)) )
-generateToken (Float p _) s = (Float p (read (read s)) )
+getTokenFrom :: Token -> String -> Token
+getTokenFrom (String  p _) s = (String p s)
+getTokenFrom (Int p _) s = (Int p (read (read s)) )
+getTokenFrom (Float p _) s = (Float p (read (read s)) )
 
 while :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
 while = do
