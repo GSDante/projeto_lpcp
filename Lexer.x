@@ -46,6 +46,7 @@ tokens :-
   if                                     { \p s -> If p}
   else                                   { \p s -> Else p}
   print                                  { \p s -> Print p}
+  read                                   { \p s -> Read p}
   while                                  { \p s -> While p}
   func                                   { \p s -> Func p}
   proc                                   { \p s -> Proc p}
@@ -110,6 +111,7 @@ data Token =
   If  AlexPosn|
   Else AlexPosn|
   Print AlexPosn|
+  Read AlexPosn|
   Greater AlexPosn|
   Increment AlexPosn|
   Decrement AlexPosn|

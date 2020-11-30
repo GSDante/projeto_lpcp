@@ -175,7 +175,7 @@ stmts_proc = try( do
 
 stmt :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
 stmt = try assign <|> try declaration <|> try invoking_expression <|> try return_expression <|> 
-       print_exp <|> while <|> dowhile <|> for <|> ifs
+       print_exp <|> read_exp <|> while <|> dowhile <|> for <|> ifs
 
 stmt_proc :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
 stmt_proc = try assign <|> try declaration <|>  try invoking_expression <|> 
@@ -594,6 +594,14 @@ print_exp = do
         b <- idToken <|> stringToken
         return (a:[b])
 
+read_exp :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+read_exp = do 
+        a <- readToken
+        b <- greaterToken
+        c <- idToken
+        s <- liftIO $ getLine
+        return (a:[b])
+
 while :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
 while = do
        a <- whileToken
@@ -737,7 +745,7 @@ parser :: [Token] -> IO (Either ParseError [Token])
 parser tokens = runParserT program ([],[]) "Error message" tokens
 
 main :: IO ()
-main = case unsafePerformIO (parser (getTokens "Examples/program3.pe")) of
+main = case unsafePerformIO (parser (getTokens "Examples/program4.pe")) of
             { Left err -> print err; 
               Right ans -> print ans
             }
