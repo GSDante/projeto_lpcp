@@ -68,6 +68,14 @@ symtable_update_auxiliar (es1, Id pos1 id1, v1) ((es2, Id pos2 id2, t2, v2):t) =
                                 else (es2, Id pos2 id2, t2, v2) : symtable_update_auxiliar (es1, Id pos1 id1, v1) t
 
 
+symtable_get :: (Token) -> ([ActivStack], [Symtable]) -> Token
+symtable_get id1 ( activ, []) = id1 -- Tem que tratar isso
+symtable_get (Id pos1 id1) (activ, (es2, Id pos2 id2, t2, v2):t) = 
+                                if id1 == id2 && get_top activ == es2 then v2
+                                else symtable_get (Id pos1 id1) (activ, t)
+
+
+
 stack_insert :: ActivStack -> ([ActivStack], [Symtable])-> ([ActivStack], [Symtable])
 stack_insert scope ([],symt)  = ([scope],symt)
 stack_insert scope (activ,symt)  = ([scope] ++ activ,symt)

@@ -221,11 +221,11 @@ remaining_parameters = try (do a <- commaToken
 
 ----- OPERACOES 
 -- bool
-operacao_boolean :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+operacao_boolean :: ParsecT [Token]  ([ActivStack], [Symtable])IO( Token )
 operacao_boolean = (do
               a <- greaterToken <|> lessToken <|> greaterEqualToken <|> lessEqualToken 
                 <|> equalToken <|> diffToken
-              return [a])
+              return (a))
 
 operacao_logica :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
 operacao_logica = (do
@@ -237,18 +237,32 @@ expressao_logica = try(do
                   a <- expressao_boolean
                   b <- operacao_logica
                   c <- expressao_boolean 
-                  return (a++b++c))<|>try(do
+                  return (a++b++c))
+                  <|>try(do
                     a <- expressao_boolean
                     return (a))
             
 
 
 expressao_boolean :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
-expressao_boolean = do
-                a <- intToken <|> floatToken <|> boolToken <|> stringToken <|> idToken
+expressao_boolean = try (do
+                a <- intToken <|> floatToken <|> boolToken <|> stringToken 
                 b <- operacao_boolean
-                c <- intToken <|> floatToken <|> boolToken <|> stringToken <|> idToken
-                return ([a]++b++[c])
+                c <- intToken <|> floatToken <|> boolToken <|> stringToken 
+                return [eval a b c] )
+                <|>
+                (do a <- idToken
+                    b <- operacao_boolean
+                    c <- intToken 
+
+                    s <- getState
+                    if (not (compatible (get_type a s) c)) then fail "type mismatch"
+                    else 
+                      do 
+                      s <- getState
+                      liftIO (print s)
+                      return [eval (symtable_get a s) b c] )
+                  
 
 
 
@@ -774,7 +788,7 @@ parser :: [Token] -> IO (Either ParseError [Token])
 parser tokens = runParserT program ([],[]) "Error message" tokens
 
 main :: IO ()
-main = case unsafePerformIO (parser (getTokens "Examples/program5.pe")) of
+main = case unsafePerformIO (parser (getTokens "Examples/program6.pe")) of
             { Left err -> print err; 
               Right ans -> print ans
             }

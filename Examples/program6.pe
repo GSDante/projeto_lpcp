@@ -1,0 +1,10 @@
+
+
+main Begin
+
+    int x = 3;
+    if ( x != 2 ) BeginIf
+        x = 4;
+    EndIf
+
+End
