@@ -75,7 +75,6 @@ symtable_get (Id pos1 id1) (activ, (es2, Id pos2 id2, t2, v2):t) =
                                 else symtable_get (Id pos1 id1) (activ, t)
 
 
-
 stack_insert :: ActivStack -> ([ActivStack], [Symtable])-> ([ActivStack], [Symtable])
 stack_insert scope ([],symt)  = ([scope],symt)
 stack_insert scope (activ,symt)  = ([scope] ++ activ,symt)

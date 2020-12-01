@@ -23,3 +23,5 @@ eval (Float pos x) (Equal _ ) (Float _ y) = Bool pos (x == y)
 
 eval (Int pos x) (Diff _ ) (Int _ y) = Bool pos (x /= y) 
 eval (Float pos x) (Diff _ ) (Float _ y) = Bool pos (x /= y) 
+
+eval (Int pos x) (Sum _) (Sum _) = Int pos ( x + 1 )

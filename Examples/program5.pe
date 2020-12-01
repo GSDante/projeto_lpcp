@@ -1,11 +1,14 @@
-int a;
 
 main Begin
 
     string c;
     read > c;
 
-    int i;
-    read > i;
+    int b;
+    read > b;
+
+    b++;
+
+    print b;
     
 End
