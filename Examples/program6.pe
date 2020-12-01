@@ -2,7 +2,7 @@
 
 main Begin
 
-    int x = 3;
+    int x = 3 + 2;
     if ( x != 2 ) BeginIf
         x = 4;
     EndIf

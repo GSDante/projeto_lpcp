@@ -267,10 +267,10 @@ expressao_boolean = try (do
 
 
 -- int
-int_operation :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+int_operation :: ParsecT [Token]  ([ActivStack], [Symtable])IO(Token)
 int_operation = do
         a <- sumToken <|> subToken <|> multToken <|> divToken <|> expToken <|> radToken <|> restoDivToken
-        return [a]
+        return (a)
 
 
 add_expression :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
@@ -278,7 +278,7 @@ add_expression = try (do
                     a <- int_operation
                     b <- intToken
                     c <- add_expression
-                    return (a ++ [b])
+                    return (a : [b])
                   )
                   <|> 
                     return []
@@ -290,9 +290,9 @@ expressions_int = try(do
                   b <- add_expression
                   return (a++b))
                 <|>
-                  (do
+                  do
                     a <- expression_int
-                    return (a))
+                    return (a)
 
 int_values :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
 int_values = try(do
@@ -301,16 +301,31 @@ int_values = try(do
               c <- endParenthesisToken
               return ([a]++b++[c]))
               <|>
-              (do
-              a <- intToken <|> idToken
-              return [a])
+              try(do
+              a <- intToken
+              b <- int_operation
+              c <- intToken
+              return [eval a b c] )
+              <|>
+              do 
+                a <- idToken
+                b <- int_operation
+                c <- intToken 
+
+                s <- getState
+                if (not (compatible (get_type a s) c)) then fail "type mismatch"
+                else 
+                  do 
+                    s <- getState
+                    liftIO (print s)
+                    return [eval (symtable_get a s) b c] 
+                  
+
 
 expression_int :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
 expression_int = try (do
                   a <- int_values
-                  b <- int_operation
-                  c <- int_values
-                  return (a++b++c))
+                  return (a))
                   <|>
                   try (do
                     a <- absToken
