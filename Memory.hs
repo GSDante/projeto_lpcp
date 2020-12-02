@@ -9,6 +9,9 @@ type Symtable = (String, Token, [Token], Token)
 -- nome do escopo
 type ActivStack = String
 
+-- flag que indica que deve executar
+type Execute = Bool
+
 
 
 get_default_value :: [Token] -> Token
@@ -31,9 +34,9 @@ compatible _ _ = False
 
 
 -- recebe o id, compara id e escopo e retorna o valor
-get_type :: Token -> ([ActivStack], [Symtable]) -> Token
-get_type _ (activ,[]) = error "variable not found"
-get_type id1 (activ,symt) = get_type_auxiliar (get_top activ, id1) symt
+get_type :: Token -> (Execute, [ActivStack], [Symtable]) -> Token
+get_type _ (e, activ,[]) = error "variable not found"
+get_type id1 (e, activ,symt) = get_type_auxiliar (get_top activ, id1) symt
     
 
 
@@ -48,16 +51,16 @@ get_type_auxiliar (es1, Id pos1 id1) ((es2, Id pos2 id2, t2, v2):t) =
 
 -- funções para a tabela de símbolos
 
-symtable_insert :: (Token, [Token], Token) -> ([ActivStack], [Symtable])-> ([ActivStack], [Symtable])
-symtable_insert (id1, t1, v1) (activ,[])  = (activ,[(get_top activ, id1, t1, v1)])
-symtable_insert (id1, t1, v1) (activ,table)  = (activ,[(get_top activ, id1, t1, v1)]++table)
+symtable_insert :: (Token, [Token], Token) -> (Execute, [ActivStack], [Symtable])-> (Execute, [ActivStack], [Symtable])
+symtable_insert (id1, t1, v1) (e, activ,[])  = (e, activ,[(get_top activ, id1, t1, v1)])
+symtable_insert (id1, t1, v1) (e, activ,table)  = (e, activ,[(get_top activ, id1, t1, v1)]++table)
 
 
 
-symtable_update :: (Token, Token) -> ([ActivStack], [Symtable])-> ([ActivStack], [Symtable])
-symtable_update _ (activ, []) = fail "variable not found"
-symtable_update (id1, v1) ( activ, symt ) = 
-                               (activ, symtable_update_auxiliar ( get_top activ, id1, v1) symt )
+symtable_update :: (Token, Token) -> (Execute, [ActivStack], [Symtable])-> (Execute, [ActivStack], [Symtable])
+symtable_update _ (e, activ, []) = error "variable not found"
+symtable_update (id1, v1) (e, activ, symt ) = 
+                               (e, activ, symtable_update_auxiliar ( get_top activ, id1, v1) symt )
 
 
 
@@ -68,16 +71,16 @@ symtable_update_auxiliar (es1, Id pos1 id1, v1) ((es2, Id pos2 id2, t2, v2):t) =
                                 else (es2, Id pos2 id2, t2, v2) : symtable_update_auxiliar (es1, Id pos1 id1, v1) t
 
 
-symtable_get :: (Token) -> ([ActivStack], [Symtable]) -> Token
-symtable_get id1 ( activ, []) = id1 -- Tem que tratar isso
-symtable_get (Id pos1 id1) (activ, (es2, Id pos2 id2, t2, v2):t) = 
+symtable_get :: (Token) -> (Execute, [ActivStack], [Symtable]) -> Token
+symtable_get id1 ( e, activ, []) = id1 -- Tem que tratar isso
+symtable_get (Id pos1 id1) (e, activ, (es2, Id pos2 id2, t2, v2):t) = 
                                 if id1 == id2 && get_top activ == es2 then v2
-                                else symtable_get (Id pos1 id1) (activ, t)
+                                else symtable_get (Id pos1 id1) (e, activ, t)
 
 
-stack_insert :: ActivStack -> ([ActivStack], [Symtable])-> ([ActivStack], [Symtable])
-stack_insert scope ([],symt)  = ([scope],symt)
-stack_insert scope (activ,symt)  = ([scope] ++ activ,symt)
+stack_insert :: ActivStack -> (Execute, [ActivStack], [Symtable])-> (Execute, [ActivStack], [Symtable])
+stack_insert scope (e, [],symt)  = (e, [scope],symt)
+stack_insert scope (e, activ,symt)  = (e, [scope] ++ activ,symt)
 
 
 get_top :: [ActivStack]-> String
@@ -85,9 +88,32 @@ get_top [] = ""
 get_top (h:b) = h
 
 
-stack_remove :: ActivStack -> ([ActivStack], [Symtable])-> ([ActivStack], [Symtable])
-stack_remove scope ([],symt) = fail "variable not found"
-stack_remove scope ((h:b),symt) = (b, symt)
+stack_remove :: ActivStack -> (Execute, [ActivStack], [Symtable])-> (Execute, [ActivStack], [Symtable])
+stack_remove scope (e, [], symt) = error "variable not found"
+stack_remove scope (e, (h:b),symt) = (e, b, symt)
+
+
+begin_execute :: (Execute, [ActivStack], [Symtable]) -> (Execute, [ActivStack], [Symtable])
+begin_execute (e, a:b, c:d) = (True, a:b, c:d)
+begin_execute (e, [], c:d) = (True, [], c:d)
+begin_execute (e, a:b, []) = (True, a:b, [])
+begin_execute (e, [], []) = (True, [], [])
+
+end_execute :: (Execute, [ActivStack], [Symtable]) -> (Execute, [ActivStack], [Symtable])
+end_execute (e, a:b, c:d) = (False, a:b, c:d)
+end_execute (e, [], c:d) = (False, [], c:d)
+end_execute (e, a:b, []) = (False, a:b, [])
+end_execute (e, [], []) = (False, [], [])
+
+is_executing :: (Execute, [ActivStack], [Symtable]) -> Bool
+is_executing (e, a:b, c:d) = e
+is_executing (e, [], c:d) = e
+is_executing (e, a:b, []) = e
+is_executing (e, [], []) = e
+
+check_execute :: Token -> Bool
+check_execute (Bool p e) = e
+check_execute _ = error "type mismatch"
 
 -- Uma variável tem um escopo, tem que salvar esse escopo.  
 -- Quando uma variável for ser salva, acho que dá pra pegar a pilha de ativação

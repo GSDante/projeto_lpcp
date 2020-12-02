@@ -19,7 +19,7 @@ import Data.List
 
 primTypeToken = intToken <|> stringToken <|> floatToken <|> boolToken
 
-arrayToken :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+arrayToken :: ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO([Token])
 arrayToken =
     do
       lbrack <- beginIndexToken
@@ -39,7 +39,7 @@ remainingContent =
              return (a: b)) 
     <|> (return [])  
 
-matrixToken :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+matrixToken :: ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO([Token])
 matrixToken  =
     do
       lbrack <- beginIndexToken
@@ -63,13 +63,13 @@ remainingContentMatrix =
     <|> (return [])  
 
 
-arrayTypeToken :: ParsecT [Token] ([ActivStack], [Symtable]) IO([Token])
+arrayTypeToken :: ParsecT [Token] (Execute, [ActivStack], [Symtable]) IO([Token])
 arrayTypeToken =  do l <- beginIndexToken
                      t <- typeToken
                      r <- endIndexToken
                      return (l : t : [r])
 
-generalTypeToken :: ParsecT [Token] ([ActivStack], [Symtable]) IO([Token])
+generalTypeToken :: ParsecT [Token] (Execute, [ActivStack], [Symtable]) IO([Token])
 generalTypeToken = try ( do a <- typeToken
                             b <- beginIndexToken
                             c <- typeToken
@@ -79,15 +79,16 @@ generalTypeToken = try ( do a <- typeToken
                            return ([a])
 
 
-program ::  ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+program ::  ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO([Token])
 program = do
             a <- global_variable
             b <- subprograms 
+            updateState( begin_execute )
             c <- mainProgram
             eof
             return (a ++ b ++ c) 
 
-global_variable ::  ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+global_variable ::  ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO([Token])
 global_variable = try(do
                 a <- try assign <|> try declaration
                 b <- semiColonToken
@@ -95,14 +96,14 @@ global_variable = try(do
                 return (a ++ [b] ++ c))
                 <|> return []
                 
-remaining_global_variable ::  ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+remaining_global_variable ::  ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO([Token])
 remaining_global_variable = try (do
                 a <- global_variable
                 return(a))
                 <|>
                 return []
 
-subprograms :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+subprograms :: ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO([Token])
 subprograms = try (do
           a <- subprogram
           b <- subprograms
@@ -111,7 +112,7 @@ subprograms = try (do
           return []
 
 
-subprogram :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+subprogram :: ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO([Token])
 subprogram = (do 
             a <- funcToken 
             b <- typeToken
@@ -138,7 +139,7 @@ subprogram = (do
             return (a:c:[d]++e++[f]++[g]++h++[i] ++ j))
 
 
-parameters :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+parameters :: ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO([Token])
 parameters = try (do
             a <- generalTypeToken
             b <- idToken
@@ -149,7 +150,7 @@ parameters = try (do
             return []
 
 
-mainProgram :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+mainProgram :: ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO([Token])
 mainProgram = do
             a <- programToken 
             updateState(stack_insert ("main"))
@@ -160,7 +161,7 @@ mainProgram = do
             d <- endToken
             return (a:[b] ++ c ++ [d])
 
-stmts :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+stmts :: ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO([Token])
 stmts = try( do
           first <- stmt
           next <- remaining_stmts
@@ -169,7 +170,7 @@ stmts = try( do
           return []
 
 
-stmts_proc :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+stmts_proc :: ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO([Token])
 stmts_proc = try( do
                    first <- stmt_proc
                    next <- remaining_stmts_proc
@@ -177,16 +178,16 @@ stmts_proc = try( do
                 <|>
                 return []
 
-stmt :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+stmt :: ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO([Token])
 stmt = try expression_int <|> try assign <|> try declaration <|> try invoking_expression <|> try return_expression <|> 
        try print_exp <|> try read_exp <|> try ifs <|>  try while <|> try dowhile <|> try for  
 
-stmt_proc :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+stmt_proc :: ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO([Token])
 stmt_proc = try assign <|> try declaration <|>  try invoking_expression <|> 
             print_exp <|> while_proc <|> dowhile_proc <|> for_proc <|> ifs_proc
 
 
-declaration :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+declaration :: ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO([Token])
 declaration = try(do a <- typeToken
                      b <- idToken
                      updateState(symtable_insert (b, [a], get_default_value [a] ))
@@ -206,7 +207,7 @@ invoking_expression = do a <- idToken
                          return (a:b:c ++ [d])
 
 
-parameters_invoke :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+parameters_invoke :: ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO([Token])
 parameters_invoke = try (do
             a <- idToken <|> primTypeToken
             b <- remaining_parameters
@@ -221,35 +222,35 @@ remaining_parameters = try (do a <- commaToken
 
 ----- OPERACOES 
 -- bool
-operacao_boolean :: ParsecT [Token]  ([ActivStack], [Symtable])IO( Token )
+operacao_boolean :: ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO( Token )
 operacao_boolean = (do
               a <- greaterToken <|> lessToken <|> greaterEqualToken <|> lessEqualToken 
                 <|> equalToken <|> diffToken
               return (a))
 
-operacao_logica :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+operacao_logica :: ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO(Token)
 operacao_logica = (do
                   a <- orToken <|> andToken
-                  return [a])
+                  return a)
 
-expressao_logica :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+expressao_logica :: ParsecT [Token]  (Execute, [ActivStack], [Symtable]) IO( Token )
 expressao_logica = try(do
                   a <- expressao_boolean
                   b <- operacao_logica
                   c <- expressao_boolean 
-                  return (a++b++c))
+                  return (eval a b c))
                   <|>try(do
                     a <- expressao_boolean
                     return (a))
             
 
 
-expressao_boolean :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+expressao_boolean :: ParsecT [Token]  (Execute, [ActivStack], [Symtable]) IO(Token)
 expressao_boolean = try (do
                 a <- intToken <|> floatToken <|> boolToken <|> stringToken 
                 b <- operacao_boolean
                 c <- intToken <|> floatToken <|> boolToken <|> stringToken 
-                return [eval a b c] )
+                return (eval a b c) )
                 <|>
                 (do a <- idToken
                     b <- operacao_boolean
@@ -260,19 +261,19 @@ expressao_boolean = try (do
                     else 
                       do 
                       s <- getState
-                      return [eval (symtable_get a s) b c] )
+                      return (eval (symtable_get a s) b c) )
                   
 
 
 
 -- int
-int_operation :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+int_operation :: ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO([Token])
 int_operation = do
         a <- sumToken <|> subToken <|> multToken <|> divToken <|> expToken <|> radToken <|> restoDivToken
         return [a]
 
 
-add_expression :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+add_expression :: ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO([Token])
 add_expression = try (do
                     a <- int_operation
                     b <- intToken
@@ -283,7 +284,7 @@ add_expression = try (do
                     return []
                   
 
-expressions_int :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+expressions_int :: ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO([Token])
 expressions_int = try(do
                   a <- expression_int
                   b <- add_expression
@@ -293,7 +294,7 @@ expressions_int = try(do
                     a <- expression_int
                     return (a))
 
-int_values :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+int_values :: ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO([Token])
 int_values = try(do
               a <- beginParenthesisToken
               b <- expression_int
@@ -304,7 +305,7 @@ int_values = try(do
               a <- intToken <|> idToken
               return [a])
 
-expression_int :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+expression_int :: ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO([Token])
 expression_int = try (do a <- idToken
                          b <- sumToken
                          c <- sumToken
@@ -337,12 +338,12 @@ expression_int = try (do a <- idToken
                     return [a])
                   
                           
-float_operation :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+float_operation :: ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO([Token])
 float_operation = do
         a <- sumToken <|> subToken <|> multToken <|> divToken
         return [a]
 
-add_expression_float :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+add_expression_float :: ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO([Token])
 add_expression_float = try (do
                     a <- float_operation
                     b <- float_values
@@ -352,7 +353,7 @@ add_expression_float = try (do
                   <|> 
                     return []
                   
-expressions_float :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+expressions_float :: ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO([Token])
 expressions_float = try(do
                   a <- try expression_float
                   b <- try add_expression_float
@@ -363,7 +364,7 @@ expressions_float = try(do
                     return (a))
 
 
-float_values :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+float_values :: ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO([Token])
 float_values = try(do
               a <- beginParenthesisToken
               b <- try expression_float
@@ -374,7 +375,7 @@ float_values = try(do
               a <- floatToken <|> idToken
               return [a])     
 
-expression_float :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+expression_float :: ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO([Token])
 expression_float = try (do
                     a <- float_values
                     b <- float_operation
@@ -403,12 +404,12 @@ expression_float = try (do
 
 
 
-string_operation :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+string_operation :: ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO([Token])
 string_operation = do
            a <- equalToken <|> diffToken <|> sumToken
            return [a]
 
-string_values ::ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+string_values ::ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO([Token])
 string_values = try(do
               a <- beginParenthesisToken
               b <- try expression_string
@@ -419,7 +420,7 @@ string_values = try(do
               a <- stringToken <|> idToken
               return [a])
 
-add_expression_string :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+add_expression_string :: ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO([Token])
 add_expression_string = try (do
                     a <- string_operation
                     b <- string_values
@@ -429,7 +430,7 @@ add_expression_string = try (do
                   <|> 
                     return []
 
-expressions_string :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+expressions_string :: ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO([Token])
 expressions_string = try(do
                   a <- try expression_string
                   b <- try add_expression_string
@@ -439,14 +440,14 @@ expressions_string = try(do
                     a <- expression_string
                     return (a))
 
-sum_string::ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+sum_string::ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO([Token])
 sum_string = try(do
                   a <- string_values
                   b <- sumToken
                   c <- string_values
                   return (a ++ [b] ++ c))
 
-mult_string::ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+mult_string::ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO([Token])
 mult_string = try(do
                     a <- string_values
                     b <- multToken
@@ -458,7 +459,7 @@ mult_string = try(do
                    c <- string_values
                    return ([a] ++ [b] ++ c)
 
-len_string::ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+len_string::ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO([Token])
 len_string = try(do
                     a <- lenghtToken
                     b <- beginParenthesisToken
@@ -466,14 +467,14 @@ len_string = try(do
                     d <- endParenthesisToken
                     return ([a] ++ [b] ++ c ++ [d]))
 
-string_comparation::ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+string_comparation::ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO([Token])
 string_comparation = try(do
                          a <- string_values
                          b <- string_operation
                          c <- string_values
                          return (a++b++c))
 
-substr_operation::ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+substr_operation::ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO([Token])
 substr_operation = try(do
                          a <- substrToken
                          b <- beginParenthesisToken
@@ -485,7 +486,7 @@ substr_operation = try(do
                          h <- endParenthesisToken
                          return ([a] ++ [b] ++ c ++ [d] ++ [e] ++ [f] ++ [g] ++ [h]))
 
-expression_string :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+expression_string :: ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO([Token])
 expression_string = len_string <|> try sum_string <|> try mult_string <|> try string_operation <|> try string_comparation <|> try substr_operation
                     <|> 
                         try(do
@@ -493,7 +494,7 @@ expression_string = len_string <|> try sum_string <|> try mult_string <|> try st
                             return [a])
                             
 -- array, matrix
-array_expression :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+array_expression :: ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO([Token])
 array_expression = len_operation <|> try transpose_operation <|> try inner_prod_operation <|> 
                    try swap_lines_operation <|> try index_operation <|> 
                    do a <- try arrayToken <|> matrixToken
@@ -501,27 +502,27 @@ array_expression = len_operation <|> try transpose_operation <|> try inner_prod_
                       c <- try arrayToken <|> matrixToken
                       return (a ++ b ++ c) 
 
-len_operation :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+len_operation :: ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO([Token])
 len_operation = do a <- lenToken
                    b <- idToken
                    return (a:[b])
 
-transpose_operation :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+transpose_operation :: ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO([Token])
 transpose_operation = do a <- idToken
                          b <- transposeToken
                          return (a:[b])
 
-listify_id :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+listify_id :: ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO([Token])
 listify_id = do a <- idToken
                 return ([a])
 
-inner_prod_operation :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+inner_prod_operation :: ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO([Token])
 inner_prod_operation = do a <- listify_id <|> try arrayToken <|> matrixToken
                           b <- innerProdToken
                           c <- listify_id <|> try arrayToken <|> matrixToken
                           return (a ++ b: c) 
                           
-swap_lines_operation :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+swap_lines_operation :: ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO([Token])
 swap_lines_operation = do a <- matrixToken
                           b <- swapLinesToken
                           c <- beginParenthesisToken
@@ -531,7 +532,7 @@ swap_lines_operation = do a <- matrixToken
                           g <- endParenthesisToken
                           return (a ++ b : c:d:e:f: [g]) 
 
-index_operation :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+index_operation :: ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO([Token])
 index_operation = try (do a <- idToken
                           b <- beginIndexToken
                           c <- primTypeToken <|> idToken
@@ -547,7 +548,7 @@ index_operation = try (do a <- idToken
 -- [1], [1:1], [1:1, 1:1], [1,1], 
 index_expression =  try slice_expression <|> arrayToken
 
-slice_expression :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+slice_expression :: ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO([Token])
 slice_expression = do a <- intToken 
                       b <- colonToken
                       c <- intToken 
@@ -565,7 +566,7 @@ array_operators = do a <- sumToken <|> subToken <|> multToken <|> divToken
 
 -- COMANDOS
 
-assign :: ParsecT [Token]  ([ActivStack], [Symtable]) IO([Token])
+assign :: ParsecT [Token]  (Execute, [ActivStack], [Symtable]) IO([Token])
 assign = try (do
           t <- generalTypeToken
           a <- idToken
@@ -605,7 +606,7 @@ assign = try (do
           
           
 
-expression:: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+expression:: ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO([Token])
 expression = 
             try( do
                   a <- try array_expression <|> try expressions_int <|> try expressions_float <|> invoking_expression
@@ -626,7 +627,7 @@ expression =
                 return []
 
 
-print_exp :: ParsecT [Token]  ([ActivStack], [Symtable]) IO([Token])
+print_exp :: ParsecT [Token]  (Execute, [ActivStack], [Symtable]) IO([Token])
 print_exp = do 
         a <- printToken
         b <- idToken <|> stringToken
@@ -634,7 +635,7 @@ print_exp = do
         liftIO (print (show (symtable_get b s) ))
         return (a:[b])
 
-read_exp :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+read_exp :: ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO([Token])
 read_exp = do 
         a <- readToken
         b <- greaterToken
@@ -652,7 +653,7 @@ getTokenFrom (String  p _) s = (String p s)
 getTokenFrom (Int p _) s = (Int p (read (read s)) )
 getTokenFrom (Float p _) s = (Float p (read (read s)) )
 
-while :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+while :: ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO([Token])
 while = do
        a <- whileToken
        b <- beginParenthesisToken
@@ -661,9 +662,9 @@ while = do
        e <- beginWhileToken
        f <- stmts
        g <- endWhileToken
-       return (a:[b] ++ c ++ d:[e]++ f ++ [g]) <|> (return [])
+       return (a:b : [c] ++ d:[e]++ f ++ [g]) <|> (return [])
 
-while_proc :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+while_proc :: ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO([Token])
 while_proc = do
        a <- whileToken
        b <- beginParenthesisToken
@@ -672,9 +673,9 @@ while_proc = do
        e <- beginWhileToken
        f <- stmts_proc
        g <- endWhileToken
-       return (a:[b] ++ c ++ d:[e]++ f ++ [g]) <|> (return [])
+       return (a:b:[ c] ++ d:[e]++ f ++ [g]) <|> (return [])
 
-dowhile :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+dowhile :: ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO([Token])
 dowhile = do
        a <- doToken
        b <- beginWhileToken
@@ -684,9 +685,9 @@ dowhile = do
        f <- beginParenthesisToken
        g <- expressao_logica
        h <- endParenthesisToken
-       return ([a]++[b]++c++[d]++[e]++[f]++g++[h]) <|> (return [])
+       return ([a]++[b]++c++[d]++[e]++[f]++[g]++[h]) <|> (return [])
 
-dowhile_proc :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+dowhile_proc :: ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO([Token])
 dowhile_proc = do
        a <- doToken
        b <- beginWhileToken
@@ -696,9 +697,9 @@ dowhile_proc = do
        f <- beginParenthesisToken
        g <- expressao_logica
        h <- endParenthesisToken
-       return ([a]++[b]++c++[d]++[e]++[f]++g++[h]) <|> (return [])
+       return ([a]++[b]++c++[d]++[e]++[f] ++[g]++[h]) <|> (return [])
 
-for :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+for :: ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO([Token])
 for = do
        a <- forToken
        b <- beginParenthesisToken
@@ -711,7 +712,7 @@ for = do
        i <- endForToken
        return (a:b:c:d:e:f:[g]++h++[i]) <|> (return [])
 
-for_proc :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+for_proc :: ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO([Token])
 for_proc = do
        a <- forToken
        b <- beginParenthesisToken
@@ -724,33 +725,42 @@ for_proc = do
        i <- endForToken
        return (a:b:c:d:e:f:[g]++h++[i]) <|> (return [])
 
-ifs :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+ifs :: ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO([Token])
 ifs = 
        try (do
+         updateState( end_execute)
          a <- ifToken
          b <- beginParenthesisToken
          c <- expressao_logica  
+         if (check_execute c) then updateState( begin_execute) else updateState( end_execute)
          d <- endParenthesisToken
          e <- beginIfToken
          f <- stmts
          g <- endIfToken
          h <- elseToken
+         -- se a expressão logica não tiver dado True, começa a executar agr
+         -- se tiver dado True, chama end_execute para pular o else
+         if not (check_execute c) then updateState( begin_execute) else updateState( end_execute)
          i <- beginIfToken
          j <- stmts
          k <- endIfToken
-         return (a:[b] ++ c ++ d:[e] ++ f ++ g:h:[i] ++ j ++ [k]))
+         return (a: b : [c] ++d:[e] ++ f ++ g:h:[i] ++ j ++ [k]))
          <|>
          try (do
+           s <- getState
            a <- ifToken
            b <- beginParenthesisToken
            c <- expressao_logica 
+           if (check_execute c) then updateState( begin_execute) else updateState( end_execute)
            d <- endParenthesisToken
            e <- beginIfToken
            f <- stmts
            g <- endIfToken
-           return (a:[b] ++ c ++ d:[e]++ f ++ [g])) <|> (return [])
+           -- volta a flag ao estado anterior
+           if (is_executing s) then updateState( begin_execute) else updateState( end_execute)
+           return (a:b: [c] ++ d:[e]++ f ++ [g])) <|> (return [])
 
-ifs_proc :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+ifs_proc :: ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO([Token])
 ifs_proc = 
        try (do
          a <- ifToken
@@ -764,7 +774,7 @@ ifs_proc =
          i <- beginIfToken
          j <- stmts
          k <- endIfToken
-         return (a:[b] ++ c ++ d:[e] ++ f ++ g:h:[i] ++ j ++ [k]))
+         return (a:b: [c] ++ d:[e] ++ f ++ g:h:[i] ++ j ++ [k]))
          <|>
          (do
            a <- ifToken
@@ -774,15 +784,15 @@ ifs_proc =
            e <- beginIfToken
            f <- stmts_proc
            g <- endIfToken
-           return (a:[b] ++ c ++ d:[e]++ f ++ [g])) <|> (return [])
+           return (a:b : [c] ++ d:[e]++ f ++ [g])) <|> (return [])
 
-remaining_stmts :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+remaining_stmts :: ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO([Token])
 remaining_stmts = (do a <- semiColonToken
                       b <- stmts
                       return (a:b)) <|> (return [])
 
 
-remaining_stmts_proc :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
+remaining_stmts_proc :: ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO([Token])
 remaining_stmts_proc = (do a <- semiColonToken
                            b <- stmts_proc
                            return (a:b)) <|> (return [])
@@ -792,7 +802,7 @@ remaining_stmts_proc = (do a <- semiColonToken
 
 parser :: [Token] -> IO (Either ParseError [Token])
 --parser tokens = runParserT program [] "Error message" tokens
-parser tokens = runParserT program ([],[]) "Error message" tokens
+parser tokens = runParserT program (False, [],[]) "Error message" tokens
 
 main :: IO ()
 main = case unsafePerformIO (parser (getTokens "Examples/program6.pe")) of
