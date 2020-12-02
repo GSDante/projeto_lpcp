@@ -273,15 +273,15 @@ int_operation = do
         return (a)
 
 
-add_expression :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
-add_expression = try (do
+add_expression :: Token -> ParsecT [Token]  ([ActivStack], [Symtable])IO(Token)
+add_expression n = try (do
                     a <- int_operation
-                    b <- intToken
-                    c <- add_expression
-                    return (a : [b])
+                    b <- intToken <|> floatToken
+                    c <- add_expression (eval n a b)
+                    return (c)
                   )
                   <|> 
-                    return []
+                    return (n)
                   
 
 expressions_int :: ParsecT [Token]  ([ActivStack], [Symtable]) IO(Token)
@@ -302,15 +302,14 @@ int_values = -- try(do
               -- return ([a]++b++[c]))
               -- <|>
               try(do
-              a <- intToken
-              b <- int_operation
-              c <- intToken
-              return (eval a b c) )
+              a <- intToken <|> floatToken
+              b <- add_expression a
+              return (b) )
               <|>
               do 
                 a <- idToken
                 b <- int_operation
-                c <- intToken 
+                c <- intToken <|> floatToken
 
                 s <- getState
                 if (not (compatible (get_type a s) c)) then fail "type mismatch"
@@ -327,6 +326,7 @@ expression_int = try (do
                   a <- int_values
                   return (a))
                   <|>
+                  
                   --try (do
                    -- a <- absToken
                     --b <- beginParenthesisToken
@@ -352,63 +352,78 @@ float_operation = do
         a <- sumToken <|> subToken <|> multToken <|> divToken
         return [a]
 
-add_expression_float :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
-add_expression_float = try (do
-                    a <- float_operation
-                    b <- float_values
-                    c <- try add_expression_float
-                    return (a ++ b)
+add_expression_float ::Token -> ParsecT [Token]  ([ActivStack], [Symtable])IO(Token)
+add_expression_float n = try (do
+                    a <- int_operation
+                    b <- intToken <|> floatToken
+                    c <- add_expression (eval n a b)
+                    return (c)
                   )
                   <|> 
-                    return []
+                    return (n)
                   
-expressions_float :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
-expressions_float = try(do
-                  a <- try expression_float
-                  b <- try add_expression_float
-                  return (a++b))
-                <|>
-                  (do
-                    a <- expression_float
-                    return (a))
-
-
-float_values :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
-float_values = try(do
-              a <- beginParenthesisToken
-              b <- try expression_float
-              c <- endParenthesisToken
-              return ([a]++b++[c]))
-              <|>
-              (do
-              a <- floatToken <|> idToken
-              return [a])     
-
-expression_float :: ParsecT [Token]  ([ActivStack], [Symtable])IO([Token])
-expression_float = try (do
-                    a <- float_values
-                    b <- float_operation
-                    c <- float_values
-                    return (a++b++c))
-                  <|>
-                  try (do
-                    a <- absToken
-                    b <- beginParenthesisToken
-                    c <- float_values
-                    d <- endParenthesisToken
-                    return ([a]++[b]++c++[d]) )
-                  <|>
-                  try(do
-                    a <- absToken
-                    b <- beginParenthesisToken
-                    c <- subToken
-                    d <- float_values
-                    e <- endParenthesisToken
-                    return ([a]++[b]++[c]++d++[e]) )
-                  <|>
+expressions_float :: ParsecT [Token]  ([ActivStack], [Symtable])IO(Token)
+expressions_float = --try(do
+                  --a <- expression_int
+                  --b <- add_expression
+                  --return (a++b))
+                -- <|>
                   do
+                    a <- expression_int
+                    return (a)
+
+
+float_values :: ParsecT [Token]  ([ActivStack], [Symtable])IO(Token)
+float_values = -- try(do
+              -- a <- beginParenthesisToken
+              -- b <- expression_float
+              -- c <- endParenthesisToken
+              -- return ([a]++b++[c]))
+              -- <|>
+              try(do
+              a <- intToken <|> floatToken
+              b <- add_expression a
+              return (b) )
+              <|>
+              do 
+                a <- idToken
+                b <- int_operation
+                c <- intToken <|> floatToken
+
+                s <- getState
+                if (not (compatible (get_type a s) c)) then fail "type mismatch"
+                else 
+                  do 
+                    s <- getState
+                    liftIO (print s)
+                    return (eval (symtable_get a s) b c)
+                  
+
+
+expression_float :: ParsecT [Token]  ([ActivStack], [Symtable])IO(Token)
+expression_float = try (do
+                  a <- float_values
+                  return (a))
+                  <|>
+                  
+                  --try (do
+                   -- a <- absToken
+                    --b <- beginParenthesisToken
+                    --c <- intToken <|> idToken
+                    --d <- endParenthesisToken
+                    --return ([a]++[b]++[c]++[d]) )
+                  -- <|>
+                  --try (do
+                    --a <- absToken
+                    ----b <- beginParenthesisToken
+                    --c <- subToken
+                    --d <- intToken <|> idToken
+                    --e <- endParenthesisToken
+                    --return ([a]++[b]++[c]++[d]++[e]) )
+                  -- <|>
+                   try(do
                     a <- floatToken
-                    return [a]
+                    return a)
                   
 
 
