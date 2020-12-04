@@ -315,7 +315,6 @@ expression_int = try (do a <- idToken
                             do
                               updateState(symtable_update (a, eval (symtable_get a s) b c))
                               s <- getState
-                              liftIO (print s)
                               return [eval (symtable_get a s) b c]
                           else
                             do 
@@ -660,13 +659,13 @@ read_exp = do
         a <- readToken
         b <- greaterToken
         c <- idToken
-        s <- liftIO $ getLine -- recupera texto inserido pela linha de comando
         st <- getState
-        -- atualiza na tabela de simbolos
-        updateState(symtable_update (c, getTokenFrom (get_type c st) (show s) ))
-        st <- getState
-        liftIO (print st)
-        return (a:[b])
+        if is_executing(st) then
+          do s <- liftIO $ getLine -- recupera texto inserido pela linha de comando
+             -- atualiza na tabela de simbolos
+             updateState(symtable_update (c, getTokenFrom (get_type c st) (show s) ))
+             return (a:[b])
+        else return (a:[b])
 
 getTokenFrom :: Token -> String -> Token
 getTokenFrom (String  p _) s = (String p s)
@@ -680,7 +679,7 @@ while = do
        b <- beginParenthesisToken
        c <- expressao_logica
        -- verifica se a expressao logica é verdadeira 
-       if (check_execute c) then updateState( begin_execute) else updateState( end_execute)
+       if (check_execute c) then updateState( begin_execute) else updateState(end_execute)
        d <- endParenthesisToken
        e <- beginWhileToken
        f <- stmts
@@ -761,11 +760,11 @@ for_proc = do
 ifs :: ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO([Token])
 ifs = 
        try (do
-         updateState( end_execute)
+         s <- getState
          a <- ifToken
          b <- beginParenthesisToken
          c <- expressao_logica  
-         if (check_execute c) then updateState( begin_execute) else updateState( end_execute)
+         if (&&) (is_executing s) ( check_execute c) then updateState(begin_execute) else updateState( end_execute)
          d <- endParenthesisToken
          e <- beginIfToken
          f <- stmts
@@ -773,7 +772,7 @@ ifs =
          h <- elseToken
          -- se a expressão logica não tiver dado True, começa a executar agr
          -- se tiver dado True, chama end_execute para pular o else
-         if not (check_execute c) then updateState( begin_execute) else updateState( end_execute)
+         if (&&) (is_executing s) (not (check_execute c)) then updateState( begin_execute) else updateState( end_execute)
          i <- beginIfToken
          j <- stmts
          k <- endIfToken
@@ -784,7 +783,7 @@ ifs =
            a <- ifToken
            b <- beginParenthesisToken
            c <- expressao_logica 
-           if (check_execute c) then updateState( begin_execute) else updateState( end_execute)
+           if (&&) (is_executing s) ( check_execute c) then updateState( begin_execute) else updateState( end_execute)
            d <- endParenthesisToken
            e <- beginIfToken
            f <- stmts
