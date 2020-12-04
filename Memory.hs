@@ -115,11 +115,3 @@ check_execute :: Token -> Bool
 check_execute (Bool p e) = e
 check_execute _ = error "type mismatch"
 
--- Uma variável tem um escopo, tem que salvar esse escopo.  
--- Quando uma variável for ser salva, acho que dá pra pegar a pilha de ativação
--- Ver qual é o escopo de lá, o topo da pilha, e salvar com esse escopo
-
-
--- A parte dos subprogramas. Tem que criar outra tabela que vai salvar o nome do subprograma
--- o header e o corpo. Aí quando for feita uma chamada pra esse subprograma, procura nessa 
--- tabela o nome, vê se o header se encaixa e executa a sequencia de tokens salvas nesse body

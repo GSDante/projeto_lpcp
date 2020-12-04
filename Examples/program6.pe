@@ -2,9 +2,15 @@
 
 main Begin
 
-    int x = 3;
-    if ( x != 2 ) BeginIf
-        x = 4;
-    EndIf
+    int x = 1;
+
+    while (x < 4) BeginWhile
+        
+        if ( x < 5 ) BeginIf
+            x++;
+        EndIf
+
+    EndWhile;
+
 
 End

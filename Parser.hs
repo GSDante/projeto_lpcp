@@ -180,7 +180,7 @@ stmts_proc = try( do
 
 stmt :: ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO([Token])
 stmt = try expression_int <|> try assign <|> try declaration <|> try invoking_expression <|> try return_expression <|> 
-       try print_exp <|> try read_exp <|> try ifs <|>  try while <|> try dowhile <|> try for  
+       try print_exp <|> try read_exp <|>  try while <|> try ifs  <|> try dowhile <|> try for  
 
 stmt_proc :: ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO([Token])
 stmt_proc = try assign <|> try declaration <|>  try invoking_expression <|> 
@@ -311,8 +311,17 @@ expression_int = try (do a <- idToken
                          c <- sumToken
                          s <- getState
                          -- todo: ver de o tipo de id token é compativel?
-                         updateState(symtable_update (a, eval (symtable_get a s) b c))
-                         return [eval (symtable_get a s) b c])
+                         if (is_executing s) then 
+                            do
+                              updateState(symtable_update (a, eval (symtable_get a s) b c))
+                              s <- getState
+                              liftIO (print s)
+                              return [eval (symtable_get a s) b c]
+                          else
+                            do 
+                              return [])
+                         
+                         
                  <|> try (do a <- int_values
                              b <- int_operation
                              c <- int_values
@@ -573,10 +582,16 @@ assign = try (do
           b <- assignToken
           c <- intToken <|> stringToken <|> boolToken <|> floatToken <|> idToken
           --c <- expression
-          updateState(symtable_insert (a, t, c))
-          s <- getState
-          liftIO (print s)
-          return (t ++ a:b:[c]))
+          st <- getState
+          if (is_executing st) then 
+            do
+            updateState(symtable_insert (a, t, c))
+            s <- getState
+            liftIO (print s)
+            return (t ++ a:b:[c])
+          else
+            do 
+              return [])
           <|>
           try (do
           m <- constToken
@@ -598,11 +613,16 @@ assign = try (do
           s <- getState
           if (not (compatible (get_type a s) c)) then fail "type mismatch"
           else 
-            do 
-            updateState(symtable_update (a, c))
-            s <- getState
-            liftIO (print s)
-            return (a:b:[c])
+            if (is_executing s) then 
+              do
+                updateState(symtable_update (a, c))
+                s <- getState
+                liftIO (print s)
+                return (a:b:[c])
+            else
+              do 
+                return []
+            
           
           
 
@@ -655,14 +675,27 @@ getTokenFrom (Float p _) s = (Float p (read (read s)) )
 
 while :: ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO([Token])
 while = do
+       h <- getInput
        a <- whileToken
        b <- beginParenthesisToken
        c <- expressao_logica
+       -- verifica se a expressao logica é verdadeira 
+       if (check_execute c) then updateState( begin_execute) else updateState( end_execute)
        d <- endParenthesisToken
        e <- beginWhileToken
        f <- stmts
        g <- endWhileToken
-       return (a:b : [c] ++ d:[e]++ f ++ [g]) <|> (return [])
+       
+       s <- getState
+       -- verifica se a flag esta em modo de execucao
+       if (is_executing s) then 
+         do
+         setInput h
+         i <- while
+         return (a:b : [c] ++ d:[e]++ f ++ [g])<|> (return [])
+       else 
+         do
+         return (a:b : [c] ++ d:[e]++ f ++ [g]) <|> (return [])
 
 while_proc :: ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO([Token])
 while_proc = do
