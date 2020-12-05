@@ -2,9 +2,6 @@
 
 main Begin
 
-    int x = 3^2 + 1;
-    if ( x != 2.3 ) BeginIf
-        x = 4;
-    EndIf
+    int x = 3 ^ 3 - 7 + 3;
 
 End

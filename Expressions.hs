@@ -37,7 +37,7 @@ eval (Int pos x) (Sum _) (Float _ y) =  Float pos (fromIntegral x+y)
 eval (Int pos x) (Sub _) (Float _ y) = Float pos(fromIntegral x-y)
 
 eval (Float pos x) (Div _) (Float _ y) =  Float pos (x/y)
-eval (Int pos x) (Div _) (Int _ y) =  Float pos (fromIntegral x/fromIntegral y)
+eval (Int pos x) (Div _) (Int _ y) =  Int pos (div x y)
 
 eval (Int pos x) (Pow _) (Int _ y) = Int pos(x ^ y)
 eval (Float pos x) (Pow _) (Float _ y) = Float pos(x ** y)
