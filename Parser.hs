@@ -314,7 +314,6 @@ int_values = try(do
                 else 
                   do 
                     s <- getState
-                    liftIO (print s)
                     return (eval (symtable_get a s) b c)
                   
 
@@ -593,7 +592,6 @@ assign = try (do
               do
                 updateState(symtable_update (a, c))
                 s <- getState
-                liftIO (print s)
                 return (a:b:[c])
             else
               do 
@@ -816,7 +814,7 @@ parser :: [Token] -> IO (Either ParseError [Token])
 parser tokens = runParserT program (False, [],[]) "Error message" tokens
 
 main :: IO ()
-main = case unsafePerformIO (parser (getTokens "Examples/program5.pe")) of
+main = case unsafePerformIO (parser (getTokens "Examples/problema1.pe")) of
             { Left err -> print err; 
               Right ans -> print ans
             }
