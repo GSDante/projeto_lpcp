@@ -269,7 +269,7 @@ expressao_boolean = try (do
 -- int
 int_operation :: ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO(Token)
 int_operation = do
-        a <- sumToken <|> subToken <|> multToken <|> divToken <|> expToken <|> radToken <|> restoDivToken
+        a <- sumToken <|> expToken<|> subToken <|> multToken <|> divToken  <|> radToken <|> restoDivToken
         return (a)
 
 
@@ -280,6 +280,14 @@ add_expression n = try (do
                     c <- add_expression (eval n a b)
                     return (c)
                   )
+                  <|>
+                  try (do
+                    a <- int_operation
+                    b <- idToken
+                    s <- getState
+                    c <- add_expression (eval n a (symtable_get b s))
+                    return (c)
+                  )
                   <|> 
                     return (n)
               
@@ -288,6 +296,12 @@ int_values :: ParsecT [Token]  (Execute, [ActivStack], [Symtable]) IO(Token)
 int_values = try(do
               a <- intToken <|> floatToken
               b <- add_expression a
+              return (b) )
+              <|>
+              try(do
+              a <- idToken
+              s <- getState
+              b <- add_expression (symtable_get a s)
               return (b) )
               <|>
               do 
@@ -313,7 +327,7 @@ expressions_int =  try (do
                    try(do
                     a <- intToken
                     return a)
-                  
+         
                           
 float_operation :: ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO([Token])
 float_operation = do
@@ -607,18 +621,8 @@ expression =
                   -- <|> try array_expression <|> try expressions_int <|> try expressions_float <|> invoking_expression
                   return (a) )
                   <|>
-             --try( do
-                 -- a <- try arrayToken <|> matrixToken
-                ----  return (a) )
-              --    <|>
-          -----   try( do
-               --   a <- try expressions_string
-              --    return (a))
-              --    <|>
             do a <- intToken <|> stringToken <|> boolToken <|> floatToken <|> idToken
                return a
-              --  <|>
-              --  return []
 
 
 print_exp :: ParsecT [Token]  (Execute, [ActivStack], [Symtable]) IO([Token])

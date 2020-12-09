@@ -6,4 +6,6 @@ main Begin
 
     int z = x ^ 2 - 7 + 3;
 
+    print z;
+
 End
