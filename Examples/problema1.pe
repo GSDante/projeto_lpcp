@@ -1,0 +1,12 @@
+
+main Begin
+
+    float x = 1.2;
+    int y = 4;
+    int c = 2;
+
+    int z = x ^ 2 - y + c;
+
+    print z;
+
+End

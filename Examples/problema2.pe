@@ -1,0 +1,47 @@
+
+
+main Begin
+
+    int x = 1;
+
+    int cont1;
+    int cont2;
+    int cont3;
+    int cont4;
+
+    while (x >= 0) BeginWhile
+
+        read > x;
+        
+        if ( x >=0 ) BeginIf
+            if (x <= 25) BeginIf
+                cont1++;
+            EndIf;
+        EndIf;
+
+        if ( x >=26 ) BeginIf
+            if (x <= 50) BeginIf
+                cont2++;
+            EndIf;
+        EndIf;
+
+        if ( x >=51 ) BeginIf
+            if (x <= 75) BeginIf
+                cont3++;
+            EndIf;
+        EndIf;
+    
+        if ( x >= 76 ) BeginIf
+            if (x <= 100) BeginIf
+                cont4++;
+            EndIf;
+        EndIf;
+
+    EndWhile;
+
+    print cont1;
+    print cont2;
+    print cont3;
+    print cont4;
+
+End
