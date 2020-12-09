@@ -273,30 +273,27 @@ int_operation = do
         return (a)
 
 
-add_expression :: ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO([Token])
-add_expression = try (do
+add_expression :: Token -> ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO(Token)
+add_expression n = try (do
                     a <- int_operation
-                    b <- intToken
-                    c <- add_expression
-                    return (a : [b])
+                    b <- intToken <|> floatToken
+                    c <- add_expression (eval n a b)
+                    return (c)
                   )
                   <|> 
-                    return []
-                
-
+                    return (n)
+              
 
 int_values :: ParsecT [Token]  (Execute, [ActivStack], [Symtable]) IO(Token)
-int_values = 
-              try(do
-              a <- intToken
-              b <- int_operation
-              c <- intToken
-              return (eval a b c) )
+int_values = try(do
+              a <- intToken <|> floatToken
+              b <- add_expression a
+              return (b) )
               <|>
               do 
                 a <- idToken
                 b <- int_operation
-                c <- intToken 
+                c <- intToken <|> floatToken
 
                 s <- getState
                 if (not (compatible (get_type a s) c)) then fail "type mismatch"
@@ -323,24 +320,19 @@ float_operation = do
         a <- sumToken <|> subToken <|> multToken <|> divToken
         return [a]
 
-add_expression_float :: ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO([Token])
-add_expression_float = try (do
-                    a <- float_operation
-                    b <- float_values
-                    c <- try add_expression_float
-                    return (a ++ b)
+add_expression_float ::Token -> ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO(Token)
+add_expression_float n = try (do
+                    a <- int_operation
+                    b <- intToken <|> floatToken
+                    c <- add_expression (eval n a b)
+                    return (c)
                   )
                   <|> 
-                    return []
+                    return (n)
                   
-expressions_float :: ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO([Token])
-expressions_float = try(do
-                  a <- try expression_float
-                  b <- try add_expression_float
-                  return (a++b))
-                <|>
-                  (do
-                    a <- expression_float
+expressions_float :: ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO(Token)
+expressions_float = (do
+                    a <- expressions_int
                     return (a))
 
 
@@ -551,7 +543,6 @@ assign = try (do
           t <- generalTypeToken
           a <- idToken
           b <- assignToken
-          --c <- intToken <|> stringToken <|> boolToken <|> floatToken <|> idToken
           c <- expression
           st <- getState
           if (is_executing st) then 
