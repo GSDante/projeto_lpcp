@@ -1,14 +1,9 @@
 
 main Begin
 
-    string c;
-    read > c;
+    int x;
+    read > x;
 
-    int b;
-    read > b;
+    int z = x ^ 2 - 7 + 3;
 
-    b++;
-
-    print b;
-    
 End

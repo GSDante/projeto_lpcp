@@ -267,10 +267,10 @@ expressao_boolean = try (do
 
 
 -- int
-int_operation :: ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO([Token])
+int_operation :: ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO(Token)
 int_operation = do
         a <- sumToken <|> subToken <|> multToken <|> divToken <|> expToken <|> radToken <|> restoDivToken
-        return [a]
+        return (a)
 
 
 add_expression :: ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO([Token])
@@ -278,72 +278,44 @@ add_expression = try (do
                     a <- int_operation
                     b <- intToken
                     c <- add_expression
-                    return (a ++ [b])
+                    return (a : [b])
                   )
                   <|> 
                     return []
+                
+
+
+int_values :: ParsecT [Token]  (Execute, [ActivStack], [Symtable]) IO(Token)
+int_values = 
+              try(do
+              a <- intToken
+              b <- int_operation
+              c <- intToken
+              return (eval a b c) )
+              <|>
+              do 
+                a <- idToken
+                b <- int_operation
+                c <- intToken 
+
+                s <- getState
+                if (not (compatible (get_type a s) c)) then fail "type mismatch"
+                else 
+                  do 
+                    s <- getState
+                    liftIO (print s)
+                    return (eval (symtable_get a s) b c)
                   
 
-expressions_int :: ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO([Token])
-expressions_int = try(do
-                  a <- expression_int
-                  b <- add_expression
-                  return (a++b))
-                <|>
-                  try (do
-                    a <- expression_int
-                    return (a))
 
-int_values :: ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO([Token])
-int_values = try(do
-              a <- beginParenthesisToken
-              b <- expression_int
-              c <- endParenthesisToken
-              return ([a]++b++[c]))
-              <|>
-              (do
-              a <- intToken <|> idToken
-              return [a])
-
-expression_int :: ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO([Token])
-expression_int = try (do a <- idToken
-                         b <- sumToken
-                         c <- sumToken
-                         s <- getState
-                         -- todo: ver de o tipo de id token é compativel?
-                         if (is_executing s) then 
-                            do
-                              updateState(symtable_update (a, eval (symtable_get a s) b c))
-                              s <- getState
-                              return [eval (symtable_get a s) b c]
-                          else
-                            do 
-                              return [])
-                         
-                         
-                 <|> try (do a <- int_values
-                             b <- int_operation
-                             c <- int_values
-                             return (a++b++c))
-                  <|>
-                  try (do
-                    a <- absToken
-                    b <- beginParenthesisToken
-                    c <- intToken <|> idToken
-                    d <- endParenthesisToken
-                    return ([a]++[b]++[c]++[d]) )
-                  <|>
-                  try (do
-                    a <- absToken
-                    b <- beginParenthesisToken
-                    c <- subToken
-                    d <- intToken <|> idToken
-                    e <- endParenthesisToken
-                    return ([a]++[b]++[c]++[d]++[e]) )
+expressions_int :: ParsecT [Token]  (Execute, [ActivStack], [Symtable]) IO(Token )
+expressions_int =  try (do
+                  a <- int_values
+                  return (a))
                   <|>
                    try(do
                     a <- intToken
-                    return [a])
+                    return a)
                   
                           
 float_operation :: ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO([Token])
@@ -579,8 +551,8 @@ assign = try (do
           t <- generalTypeToken
           a <- idToken
           b <- assignToken
-          c <- intToken <|> stringToken <|> boolToken <|> floatToken <|> idToken
-          --c <- expression
+          --c <- intToken <|> stringToken <|> boolToken <|> floatToken <|> idToken
+          c <- expression
           st <- getState
           if (is_executing st) then 
             do
@@ -622,28 +594,40 @@ assign = try (do
               do 
                 return []
             
-          
+expression_int = try (do a <- idToken
+                         b <- sumToken
+                         c <- sumToken
+                         s <- getState
+                         -- todo: ver de o tipo de id token é compativel?
+                         if (is_executing s) then 
+                           do
+                             updateState(symtable_update (a, eval (symtable_get a s) b c))
+                             s <- getState
+                             return [eval (symtable_get a s) b c]
+                         else
+                           do 
+                             return [])          
           
 
-expression:: ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO([Token])
+expression:: ParsecT [Token]  (Execute, [ActivStack], [Symtable])IO(Token)
 expression = 
             try( do
-                  a <- try array_expression <|> try expressions_int <|> try expressions_float <|> invoking_expression
+                  a <- try expressions_int
+                  -- <|> try array_expression <|> try expressions_int <|> try expressions_float <|> invoking_expression
                   return (a) )
                   <|>
-             try( do
-                  a <- try arrayToken <|> matrixToken
-                  return (a) )
-                  <|>
-             try( do
-                  a <- try expressions_string
-                  return (a))
-                  <|>
-             try( do 
-                  a <- intToken <|> stringToken <|> boolToken <|> floatToken <|> idToken
-                  return [a])
-                <|>
-                return []
+             --try( do
+                 -- a <- try arrayToken <|> matrixToken
+                ----  return (a) )
+              --    <|>
+          -----   try( do
+               --   a <- try expressions_string
+              --    return (a))
+              --    <|>
+            do a <- intToken <|> stringToken <|> boolToken <|> floatToken <|> idToken
+               return a
+              --  <|>
+              --  return []
 
 
 print_exp :: ParsecT [Token]  (Execute, [ActivStack], [Symtable]) IO([Token])
@@ -837,7 +821,7 @@ parser :: [Token] -> IO (Either ParseError [Token])
 parser tokens = runParserT program (False, [],[]) "Error message" tokens
 
 main :: IO ()
-main = case unsafePerformIO (parser (getTokens "Examples/program6.pe")) of
+main = case unsafePerformIO (parser (getTokens "Examples/program5.pe")) of
             { Left err -> print err; 
               Right ans -> print ans
             }
